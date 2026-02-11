@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_eco_mode/src/flutter_eco_mode_platform_interface.dart';
 import 'package:flutter_eco_mode/src/messages.g.dart';
 import 'package:flutter_eco_mode/src/streams/combine_latest.dart';
@@ -15,59 +14,22 @@ const int minWifiSignalStrength = -70;
 /// An implementation of [FlutterEcoModePlatform] that uses pigeon.
 class FlutterEcoMode extends FlutterEcoModePlatform {
   final EcoModeApi _api;
-  final StreamController<double> _batteryLevelStreamController =
-      StreamController.broadcast();
-  final StreamController<String> _batteryStateStreamController =
-      StreamController.broadcast();
-  final StreamController<bool> _batteryLowPowerModeStreamController =
-      StreamController.broadcast();
-  final StreamController<String> _connectivityStreamController =
-      StreamController.broadcast();
+  final Stream<double>? _batteryLevelStream;
+  final Stream<BatteryState>? _batteryStateStream;
+  final Stream<bool>? _batteryModeStream;
+  final Stream<Connectivity>? _connectivityStream;
 
   FlutterEcoMode({
-    EcoModeApi? api,
-    EventChannel? batteryLevelEventChannel,
-    EventChannel? batteryStatusEventChannel,
-    EventChannel? batteryModeEventChannel,
-    EventChannel? connectivityStateEventChannel,
-  }) : _api = api ?? EcoModeApi() {
-    (batteryLevelEventChannel ??
-            const EventChannel('sncf.connect.tech/battery.level'))
-        .receiveBroadcastStream()
-        .listen((event) {
-          if (event is double) {
-            _batteryLevelStreamController.add(event);
-          } else {
-            log("Battery level event is not a double: $event");
-          }
-        });
-    (batteryStatusEventChannel ??
-            const EventChannel('sncf.connect.tech/battery.state'))
-        .receiveBroadcastStream()
-        .listen((event) {
-          if (event is String) {
-            _batteryStateStreamController.add(event);
-          } else {
-            log("Battery state event is not a String: $event");
-          }
-        });
-    (batteryModeEventChannel ??
-            const EventChannel('sncf.connect.tech/battery.isLowPowerMode'))
-        .receiveBroadcastStream()
-        .listen((event) {
-          if (event is bool) {
-            _batteryLowPowerModeStreamController.add(event);
-          } else {
-            log("Battery low power mode event is not a bool: $event");
-          }
-        });
-    (connectivityStateEventChannel ??
-            const EventChannel('sncf.connect.tech/connectivity.state'))
-        .receiveBroadcastStream()
-        .listen((event) {
-          _connectivityStreamController.add(event);
-        });
-  }
+    @visibleForTesting EcoModeApi? api,
+    @visibleForTesting Stream<double>? batteryLevelStream,
+    @visibleForTesting Stream<BatteryState>? batteryStateStream,
+    @visibleForTesting Stream<bool>? batteryModeStream,
+    @visibleForTesting Stream<Connectivity>? connectivityStream,
+  })  : _api = api ?? EcoModeApi(),
+        _batteryLevelStream = batteryLevelStream,
+        _batteryStateStream = batteryStateStream,
+        _batteryModeStream = batteryModeStream,
+        _connectivityStream = connectivityStream;
 
   @override
   Future<String?> getPlatformInfo() async {
@@ -117,13 +79,6 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
   @override
   Future<int> getFreeStorage() async {
     return await _api.getFreeStorage();
-  }
-
-  void dispose() {
-    _batteryLevelStreamController.close();
-    _batteryStateStreamController.close();
-    _batteryLowPowerModeStreamController.close();
-    _connectivityStreamController.close();
   }
 
   @override
@@ -211,20 +166,15 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
 
   @override
   Stream<bool> get lowPowerModeEventStream =>
-      _batteryLowPowerModeStreamController.stream;
+      _batteryModeStream ?? batteryMode();
 
   @override
   Stream<double> get batteryLevelEventStream =>
-      _batteryLevelStreamController.stream;
+      _batteryLevelStream ?? batteryLevel();
 
   @override
   Stream<BatteryState> get batteryStateEventStream =>
-      _batteryStateStreamController.stream.map(
-        (event) => BatteryState.values.firstWhere(
-          (e) => e.name == event.toString().toLowerCase(),
-          orElse: () => BatteryState.unknown,
-        ),
-      );
+      _batteryStateStream ?? batteryState();
 
   @override
   Stream<bool?> get isBatteryEcoModeStream =>
@@ -241,24 +191,7 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
 
   @override
   Stream<Connectivity> get connectivityStream =>
-      _connectivityStreamController.stream.map((event) {
-        try {
-          final connectivityMap = jsonDecode(event);
-          final connectivityTypeString = connectivityMap['type'].toLowerCase();
-          final connectivityType = ConnectivityType.values.firstWhere(
-            (e) => e.name == connectivityTypeString,
-            orElse: () => ConnectivityType.unknown,
-          );
-          final wifiSignalStrength = connectivityMap['wifiSignalStrength'];
-          return Connectivity(
-            type: connectivityType,
-            wifiSignalStrength: wifiSignalStrength,
-          );
-        } catch (error, stackTrace) {
-          log(stackTrace.toString(), error: error);
-          return Connectivity(type: ConnectivityType.unknown);
-        }
-      });
+      _connectivityStream ?? connectivity();
 
   @override
   Future<Connectivity> getConnectivity() async {

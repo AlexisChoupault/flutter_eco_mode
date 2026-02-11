@@ -251,6 +251,9 @@ class MessagesPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
   static let shared = MessagesPigeonCodec(readerWriter: MessagesPigeonCodecReaderWriter())
 }
 
+var messagesPigeonMethodCodec = FlutterStandardMethodCodec(readerWriter: MessagesPigeonCodecReaderWriter());
+
+
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol EcoModeApi {
   func getPlatformInfo() throws -> String
@@ -264,7 +267,8 @@ protocol EcoModeApi {
   func getTotalStorage() throws -> Int64
   func getFreeStorage() throws -> Int64
   func getEcoScore() throws -> Double?
-  func getConnectivity() throws -> Connectivity
+  func getConnectivity(completion: @escaping (Result<Connectivity, Error>) -> Void)
+  func requestNetworkPermissions(completion: @escaping (Result<Bool, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -419,15 +423,138 @@ class EcoModeApiSetup {
     let getConnectivityChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getConnectivity\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getConnectivityChannel.setMessageHandler { _, reply in
-        do {
-          let result = try api.getConnectivity()
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
+        api.getConnectivity { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
         }
       }
     } else {
       getConnectivityChannel.setMessageHandler(nil)
     }
+    let requestNetworkPermissionsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestNetworkPermissions\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      requestNetworkPermissionsChannel.setMessageHandler { _, reply in
+        api.requestNetworkPermissions { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      requestNetworkPermissionsChannel.setMessageHandler(nil)
+    }
   }
 }
+
+private class PigeonStreamHandler<ReturnType>: NSObject, FlutterStreamHandler {
+  private let wrapper: PigeonEventChannelWrapper<ReturnType>
+  private var pigeonSink: PigeonEventSink<ReturnType>? = nil
+
+  init(wrapper: PigeonEventChannelWrapper<ReturnType>) {
+    self.wrapper = wrapper
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
+    -> FlutterError?
+  {
+    pigeonSink = PigeonEventSink<ReturnType>(events)
+    wrapper.onListen(withArguments: arguments, sink: pigeonSink!)
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    pigeonSink = nil
+    wrapper.onCancel(withArguments: arguments)
+    return nil
+  }
+}
+
+class PigeonEventChannelWrapper<ReturnType> {
+  func onListen(withArguments arguments: Any?, sink: PigeonEventSink<ReturnType>) {}
+  func onCancel(withArguments arguments: Any?) {}
+}
+
+class PigeonEventSink<ReturnType> {
+  private let sink: FlutterEventSink
+
+  init(_ sink: @escaping FlutterEventSink) {
+    self.sink = sink
+  }
+
+  func success(_ value: ReturnType) {
+    sink(value)
+  }
+
+  func error(code: String, message: String?, details: Any?) {
+    sink(FlutterError(code: code, message: message, details: details))
+  }
+
+  func endOfStream() {
+    sink(FlutterEndOfEventStream)
+  }
+
+}
+
+class BatteryLevelStreamHandler: PigeonEventChannelWrapper<Double> {
+  static func register(with messenger: FlutterBinaryMessenger,
+                      instanceName: String = "",
+                      streamHandler: BatteryLevelStreamHandler) {
+    var channelName = "dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryLevel"
+    if !instanceName.isEmpty {
+      channelName += ".\(instanceName)"
+    }
+    let internalStreamHandler = PigeonStreamHandler<Double>(wrapper: streamHandler)
+    let channel = FlutterEventChannel(name: channelName, binaryMessenger: messenger, codec: messagesPigeonMethodCodec)
+    channel.setStreamHandler(internalStreamHandler)
+  }
+}
+      
+class BatteryStateStreamHandler: PigeonEventChannelWrapper<BatteryState> {
+  static func register(with messenger: FlutterBinaryMessenger,
+                      instanceName: String = "",
+                      streamHandler: BatteryStateStreamHandler) {
+    var channelName = "dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryState"
+    if !instanceName.isEmpty {
+      channelName += ".\(instanceName)"
+    }
+    let internalStreamHandler = PigeonStreamHandler<BatteryState>(wrapper: streamHandler)
+    let channel = FlutterEventChannel(name: channelName, binaryMessenger: messenger, codec: messagesPigeonMethodCodec)
+    channel.setStreamHandler(internalStreamHandler)
+  }
+}
+      
+class BatteryModeStreamHandler: PigeonEventChannelWrapper<Bool> {
+  static func register(with messenger: FlutterBinaryMessenger,
+                      instanceName: String = "",
+                      streamHandler: BatteryModeStreamHandler) {
+    var channelName = "dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryMode"
+    if !instanceName.isEmpty {
+      channelName += ".\(instanceName)"
+    }
+    let internalStreamHandler = PigeonStreamHandler<Bool>(wrapper: streamHandler)
+    let channel = FlutterEventChannel(name: channelName, binaryMessenger: messenger, codec: messagesPigeonMethodCodec)
+    channel.setStreamHandler(internalStreamHandler)
+  }
+}
+      
+class ConnectivityStreamHandler: PigeonEventChannelWrapper<Connectivity> {
+  static func register(with messenger: FlutterBinaryMessenger,
+                      instanceName: String = "",
+                      streamHandler: ConnectivityStreamHandler) {
+    var channelName = "dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.connectivity"
+    if !instanceName.isEmpty {
+      channelName += ".\(instanceName)"
+    }
+    let internalStreamHandler = PigeonStreamHandler<Connectivity>(wrapper: streamHandler)
+    let channel = FlutterEventChannel(name: channelName, binaryMessenger: messenger, codec: messagesPigeonMethodCodec)
+    channel.setStreamHandler(internalStreamHandler)
+  }
+}
+      

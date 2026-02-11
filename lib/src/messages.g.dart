@@ -14,40 +14,37 @@ PlatformException _createConnectionError(String channelName) {
     message: 'Unable to establish connection on channel: "$channelName".',
   );
 }
-
 bool _deepEquals(Object? a, Object? b) {
   if (a is List && b is List) {
     return a.length == b.length &&
-        a.indexed.every(
-          ((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]),
-        );
+        a.indexed
+        .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
   }
   if (a is Map && b is Map) {
-    return a.length == b.length &&
-        a.entries.every(
-          (MapEntry<Object?, Object?> entry) =>
-              (b as Map<Object?, Object?>).containsKey(entry.key) &&
-              _deepEquals(entry.value, b[entry.key]),
-        );
+    return a.length == b.length && a.entries.every((MapEntry<Object?, Object?> entry) =>
+        (b as Map<Object?, Object?>).containsKey(entry.key) &&
+        _deepEquals(entry.value, b[entry.key]));
   }
   return a == b;
 }
 
-enum BatteryState { charging, discharging, full, unknown }
+
+enum BatteryState {
+  charging,
+  discharging,
+  full,
+  unknown,
+}
 
 enum ThermalState {
   /// nominal value
   safe,
-
   /// device is getting warm, but not under throttling
   fair,
-
   /// device is getting warm and performance is throttled
   serious,
-
   /// performance is throttled, device is too hot
   critical,
-
   /// unknown state
   unknown,
 }
@@ -64,19 +61,24 @@ enum ConnectivityType {
 }
 
 class Connectivity {
-  Connectivity({required this.type, this.wifiSignalStrength});
+  Connectivity({
+    required this.type,
+    this.wifiSignalStrength,
+  });
 
   ConnectivityType type;
 
   int? wifiSignalStrength;
 
   List<Object?> _toList() {
-    return <Object?>[type, wifiSignalStrength];
+    return <Object?>[
+      type,
+      wifiSignalStrength,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static Connectivity decode(Object result) {
     result as List<Object?>;
@@ -100,8 +102,10 @@ class Connectivity {
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => Object.hashAll(_toList());
+  int get hashCode => Object.hashAll(_toList())
+;
 }
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -110,16 +114,16 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    } else if (value is BatteryState) {
+    }    else if (value is BatteryState) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    } else if (value is ThermalState) {
+    }    else if (value is ThermalState) {
       buffer.putUint8(130);
       writeValue(buffer, value.index);
-    } else if (value is ConnectivityType) {
+    }    else if (value is ConnectivityType) {
       buffer.putUint8(131);
       writeValue(buffer, value.index);
-    } else if (value is Connectivity) {
+    }    else if (value is Connectivity) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
@@ -130,16 +134,16 @@ class _PigeonCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
-      case 129:
+      case 129: 
         final value = readValue(buffer) as int?;
         return value == null ? null : BatteryState.values[value];
-      case 130:
+      case 130: 
         final value = readValue(buffer) as int?;
         return value == null ? null : ThermalState.values[value];
-      case 131:
+      case 131: 
         final value = readValue(buffer) as int?;
         return value == null ? null : ConnectivityType.values[value];
-      case 132:
+      case 132: 
         return Connectivity.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -147,16 +151,15 @@ class _PigeonCodec extends StandardMessageCodec {
   }
 }
 
+const StandardMethodCodec pigeonMethodCodec = StandardMethodCodec(_PigeonCodec());
+
 class EcoModeApi {
   /// Constructor for [EcoModeApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  EcoModeApi({
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) : pigeonVar_binaryMessenger = binaryMessenger,
-       pigeonVar_messageChannelSuffix =
-           messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+  EcoModeApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -164,8 +167,7 @@ class EcoModeApi {
   final String pigeonVar_messageChannelSuffix;
 
   Future<String> getPlatformInfo() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getPlatformInfo$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getPlatformInfo$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -192,8 +194,7 @@ class EcoModeApi {
   }
 
   Future<double> getBatteryLevel() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getBatteryLevel$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getBatteryLevel$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -220,8 +221,7 @@ class EcoModeApi {
   }
 
   Future<BatteryState> getBatteryState() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getBatteryState$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getBatteryState$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -248,8 +248,7 @@ class EcoModeApi {
   }
 
   Future<bool> isBatteryInLowPowerMode() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.isBatteryInLowPowerMode$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.isBatteryInLowPowerMode$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -276,8 +275,7 @@ class EcoModeApi {
   }
 
   Future<ThermalState> getThermalState() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getThermalState$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getThermalState$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -304,8 +302,7 @@ class EcoModeApi {
   }
 
   Future<int> getProcessorCount() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getProcessorCount$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getProcessorCount$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -332,8 +329,7 @@ class EcoModeApi {
   }
 
   Future<int> getTotalMemory() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getTotalMemory$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getTotalMemory$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -360,8 +356,7 @@ class EcoModeApi {
   }
 
   Future<int> getFreeMemory() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getFreeMemory$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getFreeMemory$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -388,8 +383,7 @@ class EcoModeApi {
   }
 
   Future<int> getTotalStorage() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getTotalStorage$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getTotalStorage$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -416,8 +410,7 @@ class EcoModeApi {
   }
 
   Future<int> getFreeStorage() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getFreeStorage$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getFreeStorage$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -444,8 +437,7 @@ class EcoModeApi {
   }
 
   Future<double?> getEcoScore() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getEcoScore$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getEcoScore$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -467,8 +459,7 @@ class EcoModeApi {
   }
 
   Future<Connectivity> getConnectivity() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getConnectivity$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.getConnectivity$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -493,4 +484,76 @@ class EcoModeApi {
       return (pigeonVar_replyList[0] as Connectivity?)!;
     }
   }
+
+  Future<bool> requestNetworkPermissions() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestNetworkPermissions$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
+    }
+  }
 }
+
+Stream<double> batteryLevel( {String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel batteryLevelChannel =
+      EventChannel('dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryLevel$instanceName', pigeonMethodCodec);
+  return batteryLevelChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as double;
+  });
+}
+    
+Stream<BatteryState> batteryState( {String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel batteryStateChannel =
+      EventChannel('dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryState$instanceName', pigeonMethodCodec);
+  return batteryStateChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as BatteryState;
+  });
+}
+    
+Stream<bool> batteryMode( {String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel batteryModeChannel =
+      EventChannel('dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryMode$instanceName', pigeonMethodCodec);
+  return batteryModeChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as bool;
+  });
+}
+    
+Stream<Connectivity> connectivity( {String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel connectivityChannel =
+      EventChannel('dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.connectivity$instanceName', pigeonMethodCodec);
+  return connectivityChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as Connectivity;
+  });
+}
+    

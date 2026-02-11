@@ -58,12 +58,6 @@ class _MyAppState extends State<_MyApp> {
   }
 
   @override
-  void dispose() {
-    plugin.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(

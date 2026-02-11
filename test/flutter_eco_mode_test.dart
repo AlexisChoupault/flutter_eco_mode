@@ -1,29 +1,26 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_eco_mode/src/flutter_eco_mode.dart';
 import 'package:flutter_eco_mode/src/flutter_eco_mode_platform_interface.dart';
 import 'package:flutter_eco_mode/src/messages.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockEventChannel extends Mock implements EventChannel {}
-
 class MockEcoModeApi extends Mock implements EcoModeApi {}
 
 void main() {
-  late EventChannel batteryLevelEventChannel;
-  late EventChannel batteryStateEventChannel;
-  late EventChannel batteryModeEventChannel;
-  late EventChannel connectivityStateEventChannel;
+  late StreamController<double> batteryLevelStreamController;
+  late StreamController<BatteryState> batteryStateStreamController;
+  late StreamController<bool> batteryModeStreamController;
+  late StreamController<Connectivity> connectivityStreamController;
   late EcoModeApi ecoModeApi;
 
   FlutterEcoMode buildEcoMode() => FlutterEcoMode(
     api: ecoModeApi,
-    batteryLevelEventChannel: batteryLevelEventChannel,
-    batteryStatusEventChannel: batteryStateEventChannel,
-    batteryModeEventChannel: batteryModeEventChannel,
-    connectivityStateEventChannel: connectivityStateEventChannel,
+    batteryLevelStream: batteryLevelStreamController.stream,
+    batteryStateStream: batteryStateStreamController.stream,
+    batteryModeStream: batteryModeStreamController.stream,
+    connectivityStream: connectivityStreamController.stream,
   );
 
   setUp(() {
@@ -41,22 +38,17 @@ void main() {
     when(
       () => ecoModeApi.getConnectivity(),
     ).thenAnswer((_) async => Connectivity(type: ConnectivityType.unknown));
-    batteryLevelEventChannel = MockEventChannel();
-    batteryStateEventChannel = MockEventChannel();
-    batteryModeEventChannel = MockEventChannel();
-    connectivityStateEventChannel = MockEventChannel();
-    when(
-      () => batteryLevelEventChannel.receiveBroadcastStream(),
-    ).thenAnswer((_) => Stream<double>.value(100.0));
-    when(
-      () => batteryStateEventChannel.receiveBroadcastStream(),
-    ).thenAnswer((_) => Stream<String>.value(BatteryState.charging.name));
-    when(
-      () => batteryModeEventChannel.receiveBroadcastStream(),
-    ).thenAnswer((_) => Stream<bool>.value(false));
-    when(
-      () => connectivityStateEventChannel.receiveBroadcastStream(),
-    ).thenAnswer((_) => Stream<String>.value('{"type": "UNKNOWN"}'));
+    batteryLevelStreamController = StreamController<double>.broadcast();
+    batteryStateStreamController = StreamController<BatteryState>.broadcast();
+    batteryModeStreamController = StreamController<bool>.broadcast();
+    connectivityStreamController = StreamController<Connectivity>.broadcast();
+  });
+
+  tearDown(() {
+    batteryLevelStreamController.close();
+    batteryStateStreamController.close();
+    batteryModeStreamController.close();
+    connectivityStreamController.close();
   });
 
   group('Battery Eco Mode', () {
@@ -166,62 +158,57 @@ void main() {
 
     group('Stream isBatteryEcoMode', () {
       test('should return false initially', () async {
-        buildEcoMode().isBatteryEcoModeStream.listen(
+        final ecoMode = buildEcoMode();
+        ecoMode.isBatteryEcoModeStream.listen(
           expectAsync1((event) {
             expect(event, false);
           }, count: 1),
         );
+        // Émettre APRÈS avoir attaché le listener
+        batteryLevelStreamController.add(100.0);
+        batteryStateStreamController.add(BatteryState.charging);
+        batteryModeStreamController.add(false);
       });
 
       test(
         'should return false when not enough battery and charging',
         () async {
-          when(
-            () => batteryLevelEventChannel.receiveBroadcastStream(),
-          ).thenAnswer((_) => Stream<double>.value(minEnoughBattery - 1));
-          when(
-            () => batteryStateEventChannel.receiveBroadcastStream(),
-          ).thenAnswer((_) => Stream<String>.value(BatteryState.charging.name));
-          buildEcoMode().isBatteryEcoModeStream.listen(
+          final ecoMode = buildEcoMode();
+          ecoMode.isBatteryEcoModeStream.listen(
             expectAsync1((event) {
               expect(event, false);
             }, count: 1),
           );
+          batteryLevelStreamController.add(minEnoughBattery - 1);
+          batteryStateStreamController.add(BatteryState.charging);
+          batteryModeStreamController.add(false);
         },
       );
 
       test('should return false when enough battery and discharging', () async {
-        when(
-          () => batteryLevelEventChannel.receiveBroadcastStream(),
-        ).thenAnswer((_) => Stream<double>.value(minEnoughBattery + 1));
-        when(
-          () => batteryStateEventChannel.receiveBroadcastStream(),
-        ).thenAnswer(
-          (_) => Stream<String>.value(BatteryState.discharging.name),
-        );
-        buildEcoMode().isBatteryEcoModeStream.listen(
+        final ecoMode = buildEcoMode();
+        ecoMode.isBatteryEcoModeStream.listen(
           expectAsync1((event) {
             expect(event, false);
           }, count: 1),
         );
+        batteryLevelStreamController.add(minEnoughBattery + 1);
+        batteryStateStreamController.add(BatteryState.discharging);
+        batteryModeStreamController.add(false);
       });
 
       test(
         'should return true when not enough battery and discharging',
         () async {
-          when(
-            () => batteryLevelEventChannel.receiveBroadcastStream(),
-          ).thenAnswer((_) => Stream<double>.value(minEnoughBattery - 1));
-          when(
-            () => batteryStateEventChannel.receiveBroadcastStream(),
-          ).thenAnswer(
-            (_) => Stream<String>.value(BatteryState.discharging.name),
-          );
-          buildEcoMode().isBatteryEcoModeStream.listen(
+          final ecoMode = buildEcoMode();
+          ecoMode.isBatteryEcoModeStream.listen(
             expectAsync1((event) {
               expect(event, true);
             }, count: 1),
           );
+          batteryLevelStreamController.add(minEnoughBattery - 1);
+          batteryStateStreamController.add(BatteryState.discharging);
+          batteryModeStreamController.add(false);
         },
       );
 
@@ -229,44 +216,16 @@ void main() {
         when(
           () => ecoModeApi.isBatteryInLowPowerMode(),
         ).thenAnswer((_) async => true);
-        buildEcoMode().isBatteryEcoModeStream.listen(
+        final ecoMode = buildEcoMode();
+        ecoMode.isBatteryEcoModeStream.listen(
           expectAsync1((event) {
             expect(event, true);
           }, count: 1),
         );
+        batteryLevelStreamController.add(100.0);
+        batteryStateStreamController.add(BatteryState.charging);
+        batteryModeStreamController.add(true);
       });
-
-      test(
-        'should return nothing when battery state event is not a string',
-        () async {
-          when(
-            () => batteryStateEventChannel.receiveBroadcastStream(),
-          ).thenAnswer((_) => Stream<bool>.value(false));
-          try {
-            await buildEcoMode().batteryStateEventStream
-                .timeout(const Duration(milliseconds: 1))
-                .first;
-          } on TimeoutException catch (e) {
-            expect(e.message, 'No stream event');
-          }
-        },
-      );
-
-      test(
-        'should return nothing when level battery event is not a double',
-        () async {
-          when(
-            () => batteryLevelEventChannel.receiveBroadcastStream(),
-          ).thenAnswer((_) => Stream<bool>.value(false));
-          try {
-            await buildEcoMode().batteryLevelEventStream
-                .timeout(const Duration(milliseconds: 1))
-                .first;
-          } on TimeoutException catch (e) {
-            expect(e.message, 'No stream event');
-          }
-        },
-      );
     });
   });
 
@@ -349,88 +308,125 @@ void main() {
 
     group('Stream hasEnoughNetwork', () {
       test('should return null when connectivity is unknown', () async {
-        buildEcoMode().hasEnoughNetworkStream().listen(
+        final ecoMode = buildEcoMode();
+        ecoMode.hasEnoughNetworkStream().listen(
           expectAsync1((event) {
             expect(event, null);
           }, count: 1),
         );
+        connectivityStreamController.add(
+          Connectivity(type: ConnectivityType.unknown),
+        );
       });
 
-      void mockConnectivityType(String type, {int? wifiSignalStrength}) {
-        when(
-          () => connectivityStateEventChannel.receiveBroadcastStream(),
-        ).thenAnswer(
-          (_) => Stream<String>.value(
-            '{"type": "$type", "wifiSignalStrength": $wifiSignalStrength}',
-          ),
-        );
-      }
-
-      void assertHasEnoughNetwork(bool? expected) {
-        buildEcoMode().hasEnoughNetworkStream().listen(
+      test('should return true when connectivity type is ethernet', () async {
+        final ecoMode = buildEcoMode();
+        ecoMode.hasEnoughNetworkStream().listen(
           expectAsync1((event) {
-            expect(event, expected);
+            expect(event, true);
           }, count: 1),
         );
-      }
-
-      test('should return null when connectivity type not exists', () async {
-        mockConnectivityType('NOT_EXISTS');
-        assertHasEnoughNetwork(null);
+        connectivityStreamController.add(
+          Connectivity(type: ConnectivityType.ethernet),
+        );
       });
 
-      test('should return true when connectivity type is ETHERNET', () async {
-        mockConnectivityType('ETHERNET');
-        assertHasEnoughNetwork(true);
+      test('should return false when connectivity type is mobile2g', () async {
+        final ecoMode = buildEcoMode();
+        ecoMode.hasEnoughNetworkStream().listen(
+          expectAsync1((event) {
+            expect(event, false);
+          }, count: 1),
+        );
+        connectivityStreamController.add(
+          Connectivity(type: ConnectivityType.mobile2g),
+        );
       });
 
-      test('should return false when connectivity type is MOBILE2G', () async {
-        mockConnectivityType('MOBILE2G');
-        assertHasEnoughNetwork(false);
+      test('should return true when connectivity type is mobile3g', () async {
+        final ecoMode = buildEcoMode();
+        ecoMode.hasEnoughNetworkStream().listen(
+          expectAsync1((event) {
+            expect(event, true);
+          }, count: 1),
+        );
+        connectivityStreamController.add(
+          Connectivity(type: ConnectivityType.mobile3g),
+        );
       });
 
-      test('should return true when connectivity type is MOBILE3G', () async {
-        mockConnectivityType('MOBILE3G');
-        assertHasEnoughNetwork(true);
+      test('should return true when connectivity type is mobile4g', () async {
+        final ecoMode = buildEcoMode();
+        ecoMode.hasEnoughNetworkStream().listen(
+          expectAsync1((event) {
+            expect(event, true);
+          }, count: 1),
+        );
+        connectivityStreamController.add(
+          Connectivity(type: ConnectivityType.mobile4g),
+        );
       });
 
-      test('should return true when connectivity type is MOBILE4G', () async {
-        mockConnectivityType('MOBILE4G');
-        assertHasEnoughNetwork(true);
-      });
-
-      test('should return true when connectivity type is MOBILE5G', () async {
-        mockConnectivityType('MOBILE5G');
-        assertHasEnoughNetwork(true);
+      test('should return true when connectivity type is mobile5g', () async {
+        final ecoMode = buildEcoMode();
+        ecoMode.hasEnoughNetworkStream().listen(
+          expectAsync1((event) {
+            expect(event, true);
+          }, count: 1),
+        );
+        connectivityStreamController.add(
+          Connectivity(type: ConnectivityType.mobile5g),
+        );
       });
 
       test(
-        'should return true when connectivity type is WIFI and signal is enough',
+        'should return true when connectivity type is wifi and signal is enough',
         () async {
-          mockConnectivityType(
-            'WIFI',
-            wifiSignalStrength: minWifiSignalStrength,
+          final ecoMode = buildEcoMode();
+          ecoMode.hasEnoughNetworkStream().listen(
+            expectAsync1((event) {
+              expect(event, true);
+            }, count: 1),
           );
-          assertHasEnoughNetwork(true);
+          connectivityStreamController.add(
+            Connectivity(
+              type: ConnectivityType.wifi,
+              wifiSignalStrength: minWifiSignalStrength,
+            ),
+          );
         },
       );
 
       test(
-        'should return false when connectivity type is WIFI and signal is not enough',
+        'should return false when connectivity type is wifi and signal is not enough',
         () async {
-          mockConnectivityType(
-            'WIFI',
-            wifiSignalStrength: minWifiSignalStrength - 1,
+          final ecoMode = buildEcoMode();
+          ecoMode.hasEnoughNetworkStream().listen(
+            expectAsync1((event) {
+              expect(event, false);
+            }, count: 1),
           );
-          assertHasEnoughNetwork(false);
+          connectivityStreamController.add(
+            Connectivity(
+              type: ConnectivityType.wifi,
+              wifiSignalStrength: minWifiSignalStrength - 1,
+            ),
+          );
         },
       );
 
       test(
-        'should return false when connectivity type is WIFI and signal is null',
+        'should return false when connectivity type is wifi and signal is null',
         () async {
-          mockConnectivityType('WIFI');
-          assertHasEnoughNetwork(false);
+          final ecoMode = buildEcoMode();
+          ecoMode.hasEnoughNetworkStream().listen(
+            expectAsync1((event) {
+              expect(event, false);
+            }, count: 1),
+          );
+          connectivityStreamController.add(
+            Connectivity(type: ConnectivityType.wifi),
+          );
         },
       );
     });
