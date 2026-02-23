@@ -268,7 +268,8 @@ protocol EcoModeApi {
   func getFreeStorage() throws -> Int64
   func getEcoScore() throws -> Double?
   func getConnectivity(completion: @escaping (Result<Connectivity, Error>) -> Void)
-  func requestNetworkPermissions(completion: @escaping (Result<Bool, Error>) -> Void)
+  func requestNetworkStatePermission(completion: @escaping (Result<Bool, Error>) -> Void)
+  func requestPhoneStatePermission(completion: @escaping (Result<Bool, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -435,10 +436,10 @@ class EcoModeApiSetup {
     } else {
       getConnectivityChannel.setMessageHandler(nil)
     }
-    let requestNetworkPermissionsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestNetworkPermissions\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let requestNetworkStatePermissionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestNetworkStatePermission\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      requestNetworkPermissionsChannel.setMessageHandler { _, reply in
-        api.requestNetworkPermissions { result in
+      requestNetworkStatePermissionChannel.setMessageHandler { _, reply in
+        api.requestNetworkStatePermission { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))
@@ -448,7 +449,22 @@ class EcoModeApiSetup {
         }
       }
     } else {
-      requestNetworkPermissionsChannel.setMessageHandler(nil)
+      requestNetworkStatePermissionChannel.setMessageHandler(nil)
+    }
+    let requestPhoneStatePermissionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestPhoneStatePermission\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      requestPhoneStatePermissionChannel.setMessageHandler { _, reply in
+        api.requestPhoneStatePermission { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      requestPhoneStatePermissionChannel.setMessageHandler(nil)
     }
   }
 }

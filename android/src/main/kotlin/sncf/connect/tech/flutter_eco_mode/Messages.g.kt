@@ -223,7 +223,8 @@ interface EcoModeApi {
   fun getFreeStorage(): Long
   fun getEcoScore(): Double?
   fun getConnectivity(callback: (Result<Connectivity>) -> Unit)
-  fun requestNetworkPermissions(callback: (Result<Boolean>) -> Unit)
+  fun requestNetworkStatePermission(callback: (Result<Boolean>) -> Unit)
+  fun requestPhoneStatePermission(callback: (Result<Boolean>) -> Unit)
 
   companion object {
     /** The codec used by EcoModeApi. */
@@ -418,10 +419,28 @@ interface EcoModeApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestNetworkPermissions$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestNetworkStatePermission$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.requestNetworkPermissions{ result: Result<Boolean> ->
+            api.requestNetworkStatePermission{ result: Result<Boolean> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestPhoneStatePermission$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.requestPhoneStatePermission{ result: Result<Boolean> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))

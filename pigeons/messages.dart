@@ -77,7 +77,10 @@ abstract class EcoModeApi {
   Connectivity getConnectivity();
 
   @async
-  bool requestNetworkPermissions();
+  bool requestNetworkStatePermission();
+
+  @async
+  bool requestPhoneStatePermission();
 }
 
 @EventChannelApi()

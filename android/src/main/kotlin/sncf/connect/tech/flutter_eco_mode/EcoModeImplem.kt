@@ -1,40 +1,57 @@
 package sncf.connect.tech.flutter_eco_mode
 
+import android.app.ActivityManager
 import android.content.Context
-import android.content.Intent
-import android.content.Intent.ACTION_BATTERY_CHANGED
-import android.content.IntentFilter
 import android.net.ConnectivityManager
-import android.os.BatteryManager
-import android.os.BatteryManager.BATTERY_STATUS_CHARGING
-import android.os.BatteryManager.BATTERY_STATUS_DISCHARGING
-import android.os.BatteryManager.BATTERY_STATUS_FULL
-import android.os.BatteryManager.BATTERY_STATUS_NOT_CHARGING
 import android.os.Build
 import android.os.Environment
 import android.os.PowerManager
-import android.os.PowerManager.THERMAL_STATUS_CRITICAL
-import android.os.PowerManager.THERMAL_STATUS_EMERGENCY
-import android.os.PowerManager.THERMAL_STATUS_LIGHT
-import android.os.PowerManager.THERMAL_STATUS_MODERATE
-import android.os.PowerManager.THERMAL_STATUS_NONE
-import android.os.PowerManager.THERMAL_STATUS_SEVERE
-import android.os.PowerManager.THERMAL_STATUS_SHUTDOWN
 import android.os.StatFs
 import android.telephony.TelephonyManager
-import sncf.connect.tech.flutter_eco_mode.BatteryState.CHARGING
-import sncf.connect.tech.flutter_eco_mode.BatteryState.DISCHARGING
-import sncf.connect.tech.flutter_eco_mode.BatteryState.FULL
-import sncf.connect.tech.flutter_eco_mode.BatteryState.UNKNOWN
-import sncf.connect.tech.flutter_eco_mode.ThermalState.CRITICAL
-import sncf.connect.tech.flutter_eco_mode.ThermalState.FAIR
-import sncf.connect.tech.flutter_eco_mode.ThermalState.SAFE
-import sncf.connect.tech.flutter_eco_mode.ThermalState.SERIOUS
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.plugin.common.PluginRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import sncf.connect.tech.flutter_eco_mode.listener.BatteryLevelListener
+import sncf.connect.tech.flutter_eco_mode.listener.BatteryStateListener
+import sncf.connect.tech.flutter_eco_mode.listener.ConnectivityStateListener
+import sncf.connect.tech.flutter_eco_mode.listener.DisposableStreamListener
+import sncf.connect.tech.flutter_eco_mode.listener.PowerModeListener
 
 class EcoModeImplem(
+    private val pluginScope: CoroutineScope,
     private val context: Context,
-    private val permissionHandler: PermissionHandler,
-) : EcoModeApi {
+) : EcoModeApi, FlutterEcoModePlugin.ActivityComponent {
+    private val ecoBatteryManager = EcoBatteryManager(context)
+    private val permissionHandler = PermissionHandler()
+    private val batteryLevelListener = BatteryLevelListener(ecoBatteryManager)
+    private val batteryStateListener = BatteryStateListener(ecoBatteryManager)
+    private val powerModeListener = PowerModeListener(ecoBatteryManager)
+    private val connectivityStateListener = ConnectivityStateListener(pluginScope, context, permissionHandler)
+
+    // ------------------- PluginActivityComponent implementation ------------------
+    override val requestPermissionsResultListener: PluginRegistry.RequestPermissionsResultListener
+        get() = permissionHandler
+
+    override val batteryLevelStreamListener: DisposableStreamListener
+        get() = batteryLevelListener
+
+    override val batteryStateStreamListener: DisposableStreamListener
+        get() = batteryStateListener
+
+    override val powerModeStreamListener: DisposableStreamListener
+        get() = powerModeListener
+
+    override val connectivityStreamListener: DisposableStreamListener
+        get() = connectivityStateListener
+
+    override fun updateActivity(binding: ActivityPluginBinding?) {
+        permissionHandler.activity = binding?.activity
+    }
+
+    // ------------------- EcoModeApi implementation ------------------
     override fun getPlatformInfo(): String {
         val release: String = Build.VERSION.RELEASE
         val device: String = Build.DEVICE
@@ -44,40 +61,30 @@ class EcoModeImplem(
         return "Android - $release - $device - $hardware - $product - $type"
     }
 
-    override fun getBatteryLevel(): Double = getBatteryLevel(getBatteryStatus())
+    override fun getBatteryLevel(): Double = ecoBatteryManager.getBatteryLevel()
 
-    private fun getBatteryLevel(intent: Intent?): Double = intent?.let {
-        val level: Int = it.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-        val scale: Int = it.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-        level * 100 / scale.toDouble()
-    } ?: 0.0
+    override fun getBatteryState(): BatteryState = ecoBatteryManager.getBatteryState()
 
-    override fun getBatteryState(): BatteryState {
-        val batteryStatus = getBatteryStatus()
-        val status: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-        return convertBatteryState(status)
-    }
-
-    override fun isBatteryInLowPowerMode(): Boolean {
-        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        return powerManager.isPowerSaveMode
-    }
+    override fun isBatteryInLowPowerMode(): Boolean = ecoBatteryManager.isLowPowerMode()
 
     override fun getThermalState(): ThermalState {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            return convertThermalState(powerManager.currentThermalStatus)
+            return powerManager.currentThermalStatus.toThermalState()
         }
         return ThermalState.UNKNOWN
     }
 
+    // TODO: rename in getAvailableProcessorsCount() to be more explicit
     override fun getProcessorCount(): Long {
         return Runtime.getRuntime().availableProcessors().toLong()
-        // TODO: check if it returns the total of cores
     }
 
     override fun getTotalMemory(): Long {
-        return Runtime.getRuntime().totalMemory()
+        val memoryInfo = ActivityManager.MemoryInfo()
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        activityManager.getMemoryInfo(memoryInfo)
+        return memoryInfo.totalMem
     }
 
     override fun getFreeMemory(): Long {
@@ -110,90 +117,81 @@ class EcoModeImplem(
     }
 
     override fun getConnectivity(callback: (Result<Connectivity>) -> Unit) {
-        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
-        val network = connectivityManager.activeNetwork
-        val telephonyManager = context.getSystemService(TelephonyManager::class.java)
-        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+        pluginScope.launch {
+            if (permissionHandler.hasReadPhoneStatePermission()) {
+                val result = withContext(Dispatchers.IO) {
+                    val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+                    val network = connectivityManager.activeNetwork
+                    val telephonyManager = context.getSystemService(TelephonyManager::class.java)
+                    val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
 
-        permissionHandler.requestReadPhoneStatePermission { granted ->
-            if (!granted) {
+                    try {
+                        val connectivity = Connectivity(
+                            type = getNetworkType(
+                                networkCapabilities = networkCapabilities,
+                                telephonyManager = telephonyManager
+                            ),
+                            wifiSignalStrength = networkCapabilities?.getWifiSignalStrength(context)
+                        )
+
+                        Result.success(connectivity)
+
+                    } catch (e: SecurityException) {
+                        Result.failure(
+                            FlutterError(
+                                code = "PERMISSION_ERROR",
+                                message = "Error while accessing network type: ${e.message}",
+                                details = null
+                            )
+                        )
+                    }
+                }
+
+                callback(result)
+
+            } else {
                 callback(
                     Result.failure(
-                        FlutterError(
+                    FlutterError(
                             code = "PERMISSION_DENIED",
                             message = "READ_BASIC_PHONE_STATE permission denied. Cannot access cellular network type.",
                             details = null
                         )
                     )
                 )
-                return@requestReadPhoneStatePermission
             }
+        }
+    }
 
+    override fun requestNetworkStatePermission(callback: (Result<Boolean>) -> Unit) {
+        pluginScope.launch {
             try {
-                val connectivity = Connectivity(
-                    type = getNetworkType(
-                        networkCapabilities = networkCapabilities,
-                        telephonyManager = telephonyManager
-                    ),
-                    wifiSignalStrength = networkCapabilities?.getWifiSignalStrength(context)
-                )
+                val granted = permissionHandler.requestNetworkStatePermission()
+                callback(Result.success(granted))
 
-                callback(Result.success(connectivity))
-
-            } catch (e: SecurityException) {
-                callback(
-                    Result.failure(
-                        FlutterError(
-                            code = "PERMISSION_ERROR",
-                            message = "Error while accessing network type: ${e.message}",
-                            details = null
-                        )
-                    )
-                )
+            } catch (e: IllegalStateException) {
+                callback(Result.failure(FlutterError(
+                    code = "ACTIVITY_NOT_ATTACHED",
+                    message = e.message ?: "Plugin not attached to an Activity",
+                    details = e.cause
+                )))
             }
         }
     }
 
-    override fun requestNetworkPermissions(callback: (Result<Boolean>) -> Unit) {
-        permissionHandler.requestReadPhoneStatePermission { granted ->
-            if (granted) {
-                callback(Result.success(true))
-            } else {
-                callback(
-                    Result.failure(
-                        FlutterError(
-                            code = "PERMISSION_DENIED",
-                            message = "READ_BASIC_PHONE_STATE or READ_PHONE_STATE permission denied. Cannot access cellular network type.",
-                            details = null
-                        )
-                    )
-                )
+    override fun requestPhoneStatePermission(callback: (Result<Boolean>) -> Unit) {
+        pluginScope.launch {
+            try {
+                val granted = permissionHandler.requestReadPhoneStatePermission()
+                callback(Result.success(granted))
+
+            } catch (e: IllegalStateException) {
+                callback(Result.failure(FlutterError(
+                    code = "ACTIVITY_NOT_ATTACHED",
+                    message = e.message ?: "Plugin not attached to an Activity",
+                    details = e.cause
+                )))
             }
-        }
-    }
-
-    private fun getBatteryStatus(): Intent? {
-        return IntentFilter(ACTION_BATTERY_CHANGED).let { intentFilter ->
-            context.registerReceiver(null, intentFilter)
-        }
-    }
-
-    private fun convertBatteryState(state: Int): BatteryState {
-        return when (state) {
-            BATTERY_STATUS_CHARGING -> CHARGING
-            BATTERY_STATUS_FULL -> FULL
-            BATTERY_STATUS_DISCHARGING, BATTERY_STATUS_NOT_CHARGING -> DISCHARGING
-            else -> UNKNOWN
-        }
-    }
-
-    private fun convertThermalState(state: Int): ThermalState {
-        return when (state) {
-            THERMAL_STATUS_NONE -> SAFE
-            THERMAL_STATUS_MODERATE, THERMAL_STATUS_LIGHT -> FAIR
-            THERMAL_STATUS_SEVERE -> SERIOUS
-            THERMAL_STATUS_CRITICAL, THERMAL_STATUS_EMERGENCY, THERMAL_STATUS_SHUTDOWN -> CRITICAL
-            else -> ThermalState.UNKNOWN
         }
     }
 }

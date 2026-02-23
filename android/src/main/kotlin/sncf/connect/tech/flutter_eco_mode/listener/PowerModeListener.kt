@@ -1,49 +1,59 @@
 package sncf.connect.tech.flutter_eco_mode.listener
 
 import android.content.BroadcastReceiver
-import android.content.ContentValues.TAG
-import android.util.Log
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.os.PowerManager
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import sncf.connect.tech.flutter_eco_mode.BatteryModeStreamHandler
+import sncf.connect.tech.flutter_eco_mode.EcoBatteryManager
+import sncf.connect.tech.flutter_eco_mode.MessagesPigeonMethodCodec
 import sncf.connect.tech.flutter_eco_mode.PigeonEventSink
 
-class PowerModeListener(private val context: Context) : BatteryModeStreamHandler() {
+class PowerModeListener(
+    private val ecoBatteryManager: EcoBatteryManager,
+) : BatteryModeStreamHandler(), DisposableStreamListener {
     private var lowPowerModeEventSink: PigeonEventSink<Boolean>? = null
     private var powerSavingReceiver: BroadcastReceiver? = null
+    private var lastPowerSaveMode: Boolean? = null
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<Boolean>) {
         lowPowerModeEventSink = sink
-        setupPowerSavingReceiver()
-
-        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        sink.success(powerManager.isPowerSaveMode)
-    }
-
-    override fun onCancel(p0: Any?) {
-        powerSavingReceiver?.let {
-            try {
-                context.unregisterReceiver(it)
-            } catch (_: IllegalArgumentException) {
-                Log.w(TAG, "Receiver already unregistered")
-            }
-        }
-        powerSavingReceiver = null
-        lowPowerModeEventSink = null
-    }
-
-    private fun setupPowerSavingReceiver() {
-        if (powerSavingReceiver != null) return
 
         powerSavingReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent?) {
-                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-                lowPowerModeEventSink?.success(powerManager.isPowerSaveMode)
+                sendPowerSaveUpdate(ecoBatteryManager.isLowPowerMode())
             }
         }
-        val filter = IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
-        context.registerReceiver(powerSavingReceiver, filter)
+
+        ecoBatteryManager.registerPowerModeReceiver(powerSavingReceiver)
+        sendPowerSaveUpdate(ecoBatteryManager.isLowPowerMode())
+    }
+
+    override fun onCancel(p0: Any?) {
+        cleanUp()
+    }
+
+    override fun register(binaryMessenger: BinaryMessenger) = register(binaryMessenger, this)
+
+    override fun dispose(binaryMessenger: BinaryMessenger) {
+        cleanUp()
+
+        val channelName = "dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryMode"
+        EventChannel(binaryMessenger, channelName, MessagesPigeonMethodCodec).setStreamHandler(null)
+    }
+
+    private fun cleanUp() {
+        powerSavingReceiver?.let { ecoBatteryManager.unregisterReceiver(it) }
+        powerSavingReceiver = null
+        lowPowerModeEventSink = null
+        lastPowerSaveMode = null
+    }
+
+    private fun sendPowerSaveUpdate(isPowerSaveMode: Boolean) {
+        if (isPowerSaveMode != lastPowerSaveMode) {
+            lastPowerSaveMode = isPowerSaveMode
+            lowPowerModeEventSink?.success(isPowerSaveMode)
+        }
     }
 }

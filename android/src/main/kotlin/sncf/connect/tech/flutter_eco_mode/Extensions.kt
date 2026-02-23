@@ -9,7 +9,18 @@ import android.net.NetworkCapabilities.TRANSPORT_ETHERNET
 import android.net.NetworkCapabilities.TRANSPORT_WIFI
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
+import android.os.BatteryManager.BATTERY_STATUS_CHARGING
+import android.os.BatteryManager.BATTERY_STATUS_DISCHARGING
+import android.os.BatteryManager.BATTERY_STATUS_FULL
+import android.os.BatteryManager.BATTERY_STATUS_NOT_CHARGING
 import android.os.Build
+import android.os.PowerManager.THERMAL_STATUS_CRITICAL
+import android.os.PowerManager.THERMAL_STATUS_EMERGENCY
+import android.os.PowerManager.THERMAL_STATUS_LIGHT
+import android.os.PowerManager.THERMAL_STATUS_MODERATE
+import android.os.PowerManager.THERMAL_STATUS_NONE
+import android.os.PowerManager.THERMAL_STATUS_SEVERE
+import android.os.PowerManager.THERMAL_STATUS_SHUTDOWN
 import android.telephony.TelephonyManager
 import android.telephony.TelephonyManager.NETWORK_TYPE_1xRTT
 import android.telephony.TelephonyManager.NETWORK_TYPE_CDMA
@@ -38,6 +49,10 @@ import sncf.connect.tech.flutter_eco_mode.ConnectivityType.MOBILE5G
 import sncf.connect.tech.flutter_eco_mode.ConnectivityType.NONE
 import sncf.connect.tech.flutter_eco_mode.ConnectivityType.UNKNOWN
 import sncf.connect.tech.flutter_eco_mode.ConnectivityType.WIFI
+import sncf.connect.tech.flutter_eco_mode.ThermalState.CRITICAL
+import sncf.connect.tech.flutter_eco_mode.ThermalState.FAIR
+import sncf.connect.tech.flutter_eco_mode.ThermalState.SAFE
+import sncf.connect.tech.flutter_eco_mode.ThermalState.SERIOUS
 
 @RequiresPermission(anyOf = [Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_BASIC_PHONE_STATE])
 fun getNetworkType(
@@ -100,4 +115,19 @@ fun NetworkCapabilities.getWifiSignalStrength(context: Context): Long? {
             }
         }
     }
+}
+
+fun Int.toBatteryState(): BatteryState = when (this) {
+    BATTERY_STATUS_CHARGING -> BatteryState.CHARGING
+    BATTERY_STATUS_FULL -> BatteryState.FULL
+    BATTERY_STATUS_DISCHARGING, BATTERY_STATUS_NOT_CHARGING -> BatteryState.DISCHARGING
+    else -> BatteryState.UNKNOWN
+}
+
+fun Int.toThermalState(): ThermalState = when (this) {
+    THERMAL_STATUS_NONE -> SAFE
+    THERMAL_STATUS_MODERATE, THERMAL_STATUS_LIGHT -> FAIR
+    THERMAL_STATUS_SEVERE -> SERIOUS
+    THERMAL_STATUS_CRITICAL, THERMAL_STATUS_EMERGENCY, THERMAL_STATUS_SHUTDOWN -> CRITICAL
+    else -> ThermalState.UNKNOWN
 }

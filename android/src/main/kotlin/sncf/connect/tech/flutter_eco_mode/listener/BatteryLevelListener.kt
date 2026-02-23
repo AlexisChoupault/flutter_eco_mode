@@ -1,51 +1,61 @@
 package sncf.connect.tech.flutter_eco_mode.listener
 
 import android.content.BroadcastReceiver
-import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.ACTION_BATTERY_CHANGED
-import android.content.IntentFilter
-import android.os.BatteryManager
-import android.util.Log
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import sncf.connect.tech.flutter_eco_mode.BatteryLevelStreamHandler
+import sncf.connect.tech.flutter_eco_mode.EcoBatteryManager
+import sncf.connect.tech.flutter_eco_mode.MessagesPigeonMethodCodec
 import sncf.connect.tech.flutter_eco_mode.PigeonEventSink
 
-class BatteryLevelListener(private val context: Context) : BatteryLevelStreamHandler() {
+class BatteryLevelListener(
+    private val ecoBatteryManager: EcoBatteryManager,
+) : BatteryLevelStreamHandler(), DisposableStreamListener {
     private var batteryLevelEventSink: PigeonEventSink<Double>? = null
     private var batteryLevelReceiver: BroadcastReceiver? = null
+    private var lastSentLevel: Double? = null
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<Double>) {
         batteryLevelEventSink = sink
 
-        setupBatteryLevelReceiver()
+        batteryLevelReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent?) {
+                sendBatteryLevel(intent)
+            }
+        }
+
+        val stickyIntent = ecoBatteryManager.registerBatteryReceiver(batteryLevelReceiver)
+        sendBatteryLevel(stickyIntent)
     }
 
     override fun onCancel(p0: Any?) {
-        batteryLevelReceiver?.let {
-            try {
-                context.unregisterReceiver(it)
-            } catch (_: IllegalArgumentException) {
-                Log.w(TAG, "Receiver already unregistered")
-            }
-        }
-
-        batteryLevelReceiver = null
-        batteryLevelEventSink = null
+        cleanUp()
     }
 
-    private fun setupBatteryLevelReceiver() {
-        batteryLevelReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent?) {
-                val batteryPct = intent?.let { i ->
-                    val level: Int = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-                    val scale: Int = i.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-                    level * 100 / scale.toFloat()
-                }
-                batteryPct?.toDouble()?.let { batteryLevelEventSink?.success(it) }
-            }
+    override fun register(binaryMessenger: BinaryMessenger) = register(binaryMessenger, this)
+
+    override fun dispose(binaryMessenger: BinaryMessenger) {
+        cleanUp()
+
+        val channelName = "dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryLevel"
+        EventChannel(binaryMessenger, channelName, MessagesPigeonMethodCodec).setStreamHandler(null)
+    }
+
+    private fun cleanUp() {
+        batteryLevelReceiver?.let { ecoBatteryManager.unregisterReceiver(it) }
+        batteryLevelReceiver = null
+        batteryLevelEventSink = null
+        lastSentLevel = null
+    }
+
+    private fun sendBatteryLevel(intent: Intent?) {
+        val batteryPct = ecoBatteryManager.parseLevel(intent)
+
+        if (batteryPct != lastSentLevel) {
+            lastSentLevel = batteryPct
+            batteryLevelEventSink?.success(batteryPct)
         }
-        val filter = IntentFilter(ACTION_BATTERY_CHANGED)
-        context.registerReceiver(batteryLevelReceiver, filter)
     }
 }

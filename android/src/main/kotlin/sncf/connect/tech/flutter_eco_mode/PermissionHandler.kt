@@ -1,5 +1,6 @@
 package sncf.connect.tech.flutter_eco_mode
 
+import android.Manifest.permission.ACCESS_NETWORK_STATE
 import android.Manifest.permission.READ_BASIC_PHONE_STATE
 import android.Manifest.permission.READ_PHONE_STATE
 import android.app.Activity
@@ -7,60 +8,68 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
-/**
- * Handler for plugin permissions.
- * Handles requesting and checking READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission.
- * Should be used in conjunction with ActivityPluginBinding.addRequestPermissionsResultListener.
- */
-class PermissionHandler(private val activity: Activity): RequestPermissionsResultListener {
-    private var permissionCallback: (Boolean) -> Unit = {}
+class PermissionHandler : RequestPermissionsResultListener {
+    var activity: Activity? = null
+    private val callbacks = mutableMapOf<Int, (Boolean) -> Unit>()
 
     companion object {
-        const val REQUEST_CODE = 1006
+        const val READ_PHONE_REQUEST_CODE = 1006
+        const val NETWORK_STATE_REQUEST_CODE = 1007
     }
 
-    /**
-     * Handle the result of a permission request.
-     * Should be called from onRequestPermissionsResult.
-     * @return true if this handler handled the request code
-     */
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ): Boolean {
-        if (requestCode == REQUEST_CODE) {
-            val allGranted = grantResults.isNotEmpty() && grantResults.all { it == PERMISSION_GRANTED }
-            permissionCallback(allGranted)
-            return true
-        }
-        return false
-    }
+    // -------- Synchronous Checks --------
 
-    /**
-     * Request READ_PHONE_STATE or READ_BASIC_PHONE_STATE permission.
-     * @param callback Called with true if permission is granted, false otherwise.
-     */
-    fun requestReadPhoneStatePermission(callback: (Boolean) -> Unit) {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) READ_BASIC_PHONE_STATE else READ_PHONE_STATE
-
-        if (hasPermission(permission)) {
-            callback(true)
-        } else if (shouldRequestPermissionRationale(permission)) {
-            permissionCallback = callback
-            ActivityCompat.requestPermissions(activity, arrayOf(permission), REQUEST_CODE)
-        } else {
-            callback(false)
-        }
+    fun hasNetworkStatePermission(): Boolean {
+        val act = activity ?: return false
+        return ActivityCompat.checkSelfPermission(act, ACCESS_NETWORK_STATE) == PERMISSION_GRANTED
     }
 
     fun hasReadPhoneStatePermission(): Boolean {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) READ_BASIC_PHONE_STATE else READ_PHONE_STATE
-        return hasPermission(permission)
+        val act = activity ?: return false
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            READ_BASIC_PHONE_STATE else READ_PHONE_STATE
+        return ActivityCompat.checkSelfPermission(act, permission) == PERMISSION_GRANTED
     }
 
-    private fun hasPermission(permission: String): Boolean = ActivityCompat.checkSelfPermission( activity, permission) == PERMISSION_GRANTED
+    // -------- Asynchronous Requests --------
 
-    private fun shouldRequestPermissionRationale(permission: String): Boolean = ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
+    suspend fun requestNetworkStatePermission(): Boolean = suspendCancellableCoroutine { continuation ->
+        withActivity { activity ->
+            if (hasNetworkStatePermission()) {
+                continuation.resume(true)
+            } else {
+                callbacks[NETWORK_STATE_REQUEST_CODE] = { continuation.resume(it) }
+                ActivityCompat.requestPermissions(activity, arrayOf(ACCESS_NETWORK_STATE), NETWORK_STATE_REQUEST_CODE)
+            }
+        }
+    }
+
+    suspend fun requestReadPhoneStatePermission(): Boolean = suspendCancellableCoroutine { continuation ->
+        withActivity { activity ->
+            if (hasReadPhoneStatePermission()) {
+                continuation.resume(true)
+            } else {
+                val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    READ_BASIC_PHONE_STATE else READ_PHONE_STATE
+
+                callbacks[READ_PHONE_REQUEST_CODE] = { continuation.resume(it) }
+                ActivityCompat.requestPermissions(activity, arrayOf(permission), READ_PHONE_REQUEST_CODE)
+            }
+        }
+    }
+
+    // -------- Utils --------
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
+        val allGranted = grantResults.isNotEmpty() && grantResults.all { it == PERMISSION_GRANTED }
+        callbacks.remove(requestCode)?.invoke(allGranted)
+        return callbacks.containsKey(requestCode) // Retourne true si on a géré ce code
+    }
+
+    private fun withActivity(block: (Activity) -> Unit) {
+        activity?.let { block(it) } ?: throw IllegalStateException("EcoMode Plugin: No linked Activity.")
+    }
 }
