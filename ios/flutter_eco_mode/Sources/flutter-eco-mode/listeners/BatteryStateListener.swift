@@ -8,13 +8,13 @@
 import Flutter
 
 class BatteryStateListener: BatteryStateStreamHandler, DisposableStreamListener {
-    private var eventSink: FlutterEventSink?
+    private var eventSink: PigeonEventSink<BatteryState>?
     private var lastSentState: BatteryState?
     
     // MARK: - BatteryStateStreamHandler implementation
 
-    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        self.eventSink = events
+    override func onListen(withArguments arguments: Any?, sink: PigeonEventSink<BatteryState>) {
+        self.eventSink = sink
         
         sendUpdate()
         
@@ -24,13 +24,10 @@ class BatteryStateListener: BatteryStateStreamHandler, DisposableStreamListener 
             name: UIDevice.batteryStateDidChangeNotification,
             object: nil
         )
-        
-        return nil
     }
     
-    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    override func onCancel(withArguments arguments: Any?) {
         cleanUp()
-        return nil
     }
     
     // MARK: - DisposableStreamListener implementation
@@ -60,7 +57,7 @@ class BatteryStateListener: BatteryStateStreamHandler, DisposableStreamListener 
         lastSentState = currentState
         
         DispatchQueue.main.async { [weak self] in
-            self?.eventSink?(currentState)
+            self?.eventSink?.success(currentState)
         }
     }
     

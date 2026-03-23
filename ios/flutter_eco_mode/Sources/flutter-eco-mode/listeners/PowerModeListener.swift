@@ -8,13 +8,13 @@
 import Flutter
 
 class PowerModeListener: BatteryModeStreamHandler, DisposableStreamListener {
-    private var eventSink: FlutterEventSink?
+    private var eventSink: PigeonEventSink<Bool>?
     private var lastSentPowerMode: Bool?
     
     // MARK: - BatteryModeStreamHandler implementation
 
-    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        self.eventSink = events
+    override func onListen(withArguments arguments: Any?, sink: PigeonEventSink<Bool>) {
+        self.eventSink = sink
         
         sendUpdate()
         
@@ -24,13 +24,10 @@ class PowerModeListener: BatteryModeStreamHandler, DisposableStreamListener {
             name: Notification.Name.NSProcessInfoPowerStateDidChange,
             object: nil
         )
-        
-        return nil
     }
     
-    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    override func onCancel(withArguments arguments: Any?) {
         cleanUp()
-        return nil
     }
     
     // MARK: - DisposableStreamListener implementation
@@ -60,7 +57,7 @@ class PowerModeListener: BatteryModeStreamHandler, DisposableStreamListener {
         lastSentPowerMode = isLowPower
         
         DispatchQueue.main.async { [weak self] in
-            self?.eventSink?(isLowPower)
+            self?.eventSink?.success(isLowPower)
         }
     }
 

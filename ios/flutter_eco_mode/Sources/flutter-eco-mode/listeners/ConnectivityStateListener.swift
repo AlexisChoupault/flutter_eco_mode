@@ -9,15 +9,16 @@ import Flutter
 import Foundation
 
 class ConnectivityStateListener: ConnectivityStreamHandler, DisposableStreamListener {
-    private var eventSink: FlutterEventSink?
+    private var eventSink: PigeonEventSink<Connectivity>?
+    private var previousConnectivity: Connectivity?
 
-    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        return nil
+    override func onListen(withArguments arguments: Any?, sink: PigeonEventSink<Connectivity>) {
+        self.eventSink = sink
+        sendUpdate()
     }
 
-    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    override func onCancel(withArguments arguments: Any?) {
         cleanUp()
-        return nil
     }
     
     func register(binaryMessenger: any FlutterBinaryMessenger) {
@@ -31,7 +32,24 @@ class ConnectivityStateListener: ConnectivityStreamHandler, DisposableStreamList
         FlutterEventChannel(name: channelName, binaryMessenger: binaryMessenger, codec: messagesPigeonMethodCodec).setStreamHandler(nil)
     }
     
-    private func cleanUp() {
+    private func sendUpdate() {
+        let current = Connectivity(type: .unknown)
         
+        if let previousConnectivity = self.previousConnectivity {
+            if previousConnectivity == current {
+                return
+            }
+        }
+        
+        self.previousConnectivity = current
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.eventSink?.success(current)
+        }
+    }
+    
+    private func cleanUp() {
+        eventSink = nil
+        previousConnectivity = nil
     }
 }
