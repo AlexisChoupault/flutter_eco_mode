@@ -14,10 +14,10 @@ const int minWifiSignalStrength = -70;
 /// An implementation of [FlutterEcoModePlatform] that uses pigeon.
 class FlutterEcoMode extends FlutterEcoModePlatform {
   final EcoModeApi _api;
-  final Stream<double>? _batteryLevelStream;
-  final Stream<BatteryState>? _batteryStateStream;
-  final Stream<bool>? _batteryModeStream;
-  final Stream<Connectivity>? _connectivityStream;
+  Stream<double>? _batteryLevelStream;
+  Stream<BatteryState>? _batteryStateStream;
+  Stream<bool>? _batteryModeStream;
+  Stream<Connectivity>? _connectivityStream;
 
   FlutterEcoMode({
     @visibleForTesting EcoModeApi? api,
@@ -165,16 +165,13 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
   }
 
   @override
-  Stream<bool> get lowPowerModeEventStream =>
-      _batteryModeStream ?? batteryMode();
+  Stream<bool> get lowPowerModeEventStream => _batteryModeStream ??= batteryMode().asBroadcastStream();
 
   @override
-  Stream<double> get batteryLevelEventStream =>
-      _batteryLevelStream ?? batteryLevel();
+  Stream<double> get batteryLevelEventStream => _batteryLevelStream ??= batteryLevel().asBroadcastStream();
 
   @override
-  Stream<BatteryState> get batteryStateEventStream =>
-      _batteryStateStream ?? batteryState();
+  Stream<BatteryState> get batteryStateEventStream => _batteryStateStream ??= batteryState().asBroadcastStream();
 
   @override
   Stream<bool?> get isBatteryEcoModeStream =>
@@ -190,8 +187,7 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
       ]).map((event) => event.every((element) => element)).asBroadcastStream();
 
   @override
-  Stream<Connectivity> get connectivityStream =>
-      _connectivityStream ?? connectivity();
+  Stream<Connectivity> get connectivityStream => _connectivityStream ??= connectivity().asBroadcastStream();
 
   @override
   Future<Connectivity> getConnectivity() async {
