@@ -25,11 +25,11 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
     @visibleForTesting Stream<BatteryState>? batteryStateStream,
     @visibleForTesting Stream<bool>? batteryModeStream,
     @visibleForTesting Stream<Connectivity>? connectivityStream,
-  })  : _api = api ?? EcoModeApi(),
-        _batteryLevelStream = batteryLevelStream,
-        _batteryStateStream = batteryStateStream,
-        _batteryModeStream = batteryModeStream,
-        _connectivityStream = connectivityStream;
+  }) : _api = api ?? EcoModeApi(),
+       _batteryLevelStream = batteryLevelStream,
+       _batteryStateStream = batteryStateStream,
+       _batteryModeStream = batteryModeStream,
+       _connectivityStream = connectivityStream;
 
   @override
   Future<String?> getPlatformInfo() async {
@@ -165,13 +165,16 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
   }
 
   @override
-  Stream<bool> get lowPowerModeEventStream => _batteryModeStream ??= batteryMode().asBroadcastStream();
+  Stream<bool> get lowPowerModeEventStream =>
+      _batteryModeStream ??= batteryMode().asBroadcastStream();
 
   @override
-  Stream<double> get batteryLevelEventStream => _batteryLevelStream ??= batteryLevel().asBroadcastStream();
+  Stream<double> get batteryLevelEventStream =>
+      _batteryLevelStream ??= batteryLevel().asBroadcastStream();
 
   @override
-  Stream<BatteryState> get batteryStateEventStream => _batteryStateStream ??= batteryState().asBroadcastStream();
+  Stream<BatteryState> get batteryStateEventStream =>
+      _batteryStateStream ??= batteryState().asBroadcastStream();
 
   @override
   Stream<bool?> get isBatteryEcoModeStream =>
@@ -187,7 +190,8 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
       ]).map((event) => event.every((element) => element)).asBroadcastStream();
 
   @override
-  Stream<Connectivity> get connectivityStream => _connectivityStream ??= connectivity().asBroadcastStream();
+  Stream<Connectivity> get connectivityStream =>
+      _connectivityStream ??= connectivity().asBroadcastStream();
 
   @override
   Future<Connectivity> getConnectivity() async {

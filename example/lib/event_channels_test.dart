@@ -25,7 +25,7 @@ class _EventChannelsTestPageState extends State<EventChannelsTestPage> {
 
   void _addEvent(String event) {
     if (_disposed) return;
-    
+
     setState(() {
       final timestamp = DateTime.now().toString().split('.')[0];
       _events.insert(0, '[$timestamp] $event');
@@ -120,10 +120,7 @@ class _EventChannelsTestPageState extends State<EventChannelsTestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Event Channels Test'),
-        elevation: 5,
-      ),
+      appBar: AppBar(title: const Text('Event Channels Test'), elevation: 5),
       body: Column(
         children: [
           Padding(
@@ -148,51 +145,49 @@ class _EventChannelsTestPageState extends State<EventChannelsTestPage> {
             ),
           ),
           Expanded(
-            child: _events.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Waiting for events...\nTrigger some actions on your device!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _events.length,
-                    itemBuilder: (context, index) {
-                      final event = _events[index];
-                      final isError = event.contains('❌');
-                      
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 8.0,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.grey[300]!,
+            child:
+                _events.isEmpty
+                    ? const Center(
+                      child: Text(
+                        'Waiting for events...\nTrigger some actions on your device!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    )
+                    : ListView.builder(
+                      itemCount: _events.length,
+                      itemBuilder: (context, index) {
+                        final event = _events[index];
+                        final isError = event.contains('❌');
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 8.0,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            color:
+                                isError
+                                    ? Colors.red.withValues(alpha: 0.1)
+                                    : Colors.transparent,
+                          ),
+                          child: Text(
+                            event,
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              color: isError ? Colors.red[700] : Colors.black87,
                             ),
                           ),
-                          color: isError
-                              ? Colors.red.withValues(alpha: 0.1)
-                              : Colors.transparent,
-                        ),
-                        child: Text(
-                          event,
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 13,
-                            color: isError ? Colors.red[700] : Colors.black87,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
           ),
         ],
       ),
     );
   }
 }
-
-
