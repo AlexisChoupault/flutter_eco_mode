@@ -2,14 +2,11 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_eco_mode/src/constants.dart';
+import 'package:flutter_eco_mode/src/extensions.dart';
 import 'package:flutter_eco_mode/src/flutter_eco_mode_platform_interface.dart';
 import 'package:flutter_eco_mode/src/messages.g.dart';
 import 'package:flutter_eco_mode/src/streams/combine_latest.dart';
-
-const double minEnoughBattery = 10.0;
-const double minScoreMidRangeDevice = 0.5;
-const double minScoreLowEndDevice = 0.3;
-const int minWifiSignalStrength = -70;
 
 /// An implementation of [FlutterEcoModePlatform] that uses pigeon.
 class FlutterEcoMode extends FlutterEcoModePlatform {
@@ -214,45 +211,5 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
     return connectivityStream
         .map((event) => event.isEnough)
         .asBroadcastStream();
-  }
-}
-
-extension _BatteryLevel on double {
-  bool get isNotEnough => this < minEnoughBattery;
-}
-
-extension on BatteryState {
-  bool get isDischarging => this == BatteryState.discharging;
-}
-
-extension on ThermalState {
-  bool get isSeriousAtLeast =>
-      this == ThermalState.serious || this == ThermalState.critical;
-}
-
-extension on Connectivity {
-  bool? get isEnough =>
-      type == ConnectivityType.unknown
-          ? null
-          : (_isMobileEnoughNetwork ||
-              _isWifiEnoughNetwork ||
-              type == ConnectivityType.ethernet);
-
-  bool get _isMobileEnoughNetwork => [
-    ConnectivityType.mobile5g,
-    ConnectivityType.mobile4g,
-    ConnectivityType.mobile3g,
-  ].contains(type);
-
-  bool get _isWifiEnoughNetwork =>
-      ConnectivityType.wifi == type && wifiSignalStrength != null
-          ? wifiSignalStrength! >= minWifiSignalStrength
-          : false;
-}
-
-extension StreamExtensions<T> on Stream<T> {
-  Stream<T> withInitialValue(Future<T> value) async* {
-    yield await value;
-    yield* this;
   }
 }

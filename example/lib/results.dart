@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_eco_mode/flutter_eco_mode.dart';
 
 class ResultLine {
   final String label;
