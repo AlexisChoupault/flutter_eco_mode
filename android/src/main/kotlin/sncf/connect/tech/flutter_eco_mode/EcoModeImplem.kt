@@ -88,7 +88,9 @@ class EcoModeImplem(
     }
 
     override fun getFreeMemory(): Long {
-        return Runtime.getRuntime().freeMemory()
+        val memoryInfo = ActivityManager.MemoryInfo()
+        (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memoryInfo)
+        return memoryInfo.availMem
     }
 
     override fun getTotalStorage(): Long {
