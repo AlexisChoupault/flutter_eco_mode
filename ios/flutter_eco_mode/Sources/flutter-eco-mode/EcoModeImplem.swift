@@ -8,6 +8,10 @@
 import UIKit
 
 class EcoModeImplem: EcoModeApi, EcoModeComponent {
+    private let totalMemoryMinimumThreshold = 1_000_000_000
+    private let processorCountMinimumThreshold = 2
+    private let totalStorageMinimumThreshold = 16_000_000_000
+    
     private let _batteryLevelListener = BatteryLevelListener()
     private let _batteryStateListener = BatteryStateListener()
     private let _powerModeListener = PowerModeListener()
@@ -29,9 +33,9 @@ class EcoModeImplem: EcoModeApi, EcoModeComponent {
         let processorcount = try getProcessorCount()
         let totalStorage = try getTotalStorage()
         
-        if (totalMemory <= 1_000_000_000) {  score = score - 1 }
-        if (processorcount <= 2) {  score = score - 1 }
-        if (totalStorage <= 16_000_000_000) {  score = score - 1 }
+        if (totalMemory <= totalMemoryMinimumThreshold) {  score = score - 1 }
+        if (processorcount <= processorCountMinimumThreshold) {  score = score - 1 }
+        if (totalStorage <= totalStorageMinimumThreshold) {  score = score - 1 }
             
         return Double(score / nbrParams)
     }
@@ -77,7 +81,7 @@ class EcoModeImplem: EcoModeApi, EcoModeComponent {
         return Int64(ProcessInfo.processInfo.physicalMemory)
     }
     
-    func getFreeMemory() throws -> Int64 {        
+    func getFreeMemory() throws -> Int64 {
         return Int64(os_proc_available_memory())
     }
     

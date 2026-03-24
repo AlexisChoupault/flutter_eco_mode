@@ -24,6 +24,12 @@ class EcoModeImplem(
     private val pluginScope: CoroutineScope,
     private val context: Context,
 ) : EcoModeApi, FlutterEcoModePlugin.ActivityComponent {
+    companion object {
+        private const val TOTAL_MEMORY_MINIMUM_THRESHOLD = 1_000_000_000
+        private const val PROCESSOR_COUNT_MINIMUM_THRESHOLD = 2
+        private const val TOTAL_STORAGE_MINIMUM_THRESHOLD = 16_000_000_000
+    }
+
     private val ecoBatteryManager = EcoBatteryManager(context)
     private val permissionHandler = PermissionHandler()
     private val batteryLevelListener = BatteryLevelListener(ecoBatteryManager)
@@ -108,12 +114,12 @@ class EcoModeImplem(
     }
 
     override fun getEcoScore(): Double {
-        val nbrParams = 4.0
+        val nbrParams = 3.0
         var score = nbrParams
 
-        if (getTotalMemory() <= 1_000_000_000) score--
-        if (getProcessorCount() <= 2) score--
-        if (getTotalStorage() <= 16_000_000_000) score--
+        if (getTotalMemory() <= TOTAL_MEMORY_MINIMUM_THRESHOLD) score--
+        if (getProcessorCount() <= PROCESSOR_COUNT_MINIMUM_THRESHOLD) score--
+        if (getTotalStorage() <= TOTAL_STORAGE_MINIMUM_THRESHOLD) score--
 
         return score / nbrParams
     }
