@@ -131,14 +131,11 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 100));
 
-        expect(
-          emittedValues,
-          [
-            BatteryState.charging,
-            BatteryState.discharging,
-            BatteryState.full,
-          ],
-        );
+        expect(emittedValues, [
+          BatteryState.charging,
+          BatteryState.discharging,
+          BatteryState.full,
+        ]);
       });
 
       test('should emit all battery states', () async {
@@ -156,15 +153,12 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 100));
 
-        expect(
-          emittedValues,
-          [
-            BatteryState.unknown,
-            BatteryState.charging,
-            BatteryState.discharging,
-            BatteryState.full,
-          ],
-        );
+        expect(emittedValues, [
+          BatteryState.unknown,
+          BatteryState.charging,
+          BatteryState.discharging,
+          BatteryState.full,
+        ]);
       });
 
       test('should handle duplicate consecutive states', () async {
@@ -182,15 +176,12 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 100));
 
-        expect(
-          emittedValues,
-          [
-            BatteryState.discharging,
-            BatteryState.discharging,
-            BatteryState.charging,
-            BatteryState.charging,
-          ],
-        );
+        expect(emittedValues, [
+          BatteryState.discharging,
+          BatteryState.discharging,
+          BatteryState.charging,
+          BatteryState.charging,
+        ]);
       });
 
       test('should be broadcast stream', () async {
@@ -212,7 +203,10 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 100));
 
-        expect(listener1Values, [BatteryState.charging, BatteryState.discharging]);
+        expect(listener1Values, [
+          BatteryState.charging,
+          BatteryState.discharging,
+        ]);
         expect(listener2Values, [BatteryState.discharging]);
 
         subscription1.cancel();

@@ -23,8 +23,9 @@ void main() {
 
   setUp(() {
     ecoModeApi = MockEcoModeApi();
-    when(() => ecoModeApi.isBatteryInLowPowerMode())
-        .thenAnswer((_) async => false);
+    when(
+      () => ecoModeApi.isBatteryInLowPowerMode(),
+    ).thenAnswer((_) async => false);
     batteryLevelStreamController = StreamController<double>.broadcast();
     batteryStateStreamController = StreamController<BatteryState>.broadcast();
     batteryModeStreamController = StreamController<bool>.broadcast();
@@ -51,30 +52,32 @@ void main() {
         batteryModeStreamController.add(false);
       });
 
-      test('should return true when battery level drops below minimum and discharging',
-          () async {
-        final ecoMode = buildEcoMode();
-        final results = <bool?>[];
+      test(
+        'should return true when battery level drops below minimum and discharging',
+        () async {
+          final ecoMode = buildEcoMode();
+          final results = <bool?>[];
 
-        ecoMode.isBatteryEcoModeStream.listen((event) {
-          results.add(event);
-        });
+          ecoMode.isBatteryEcoModeStream.listen((event) {
+            results.add(event);
+          });
 
-        // Initial state: healthy battery
-        batteryLevelStreamController.add(100.0);
-        batteryStateStreamController.add(BatteryState.charging);
-        batteryModeStreamController.add(false);
+          // Initial state: healthy battery
+          batteryLevelStreamController.add(100.0);
+          batteryStateStreamController.add(BatteryState.charging);
+          batteryModeStreamController.add(false);
 
-        await Future.delayed(const Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 100));
 
-        // Change to low battery and discharging
-        batteryLevelStreamController.add(minEnoughBattery - 1);
-        batteryStateStreamController.add(BatteryState.discharging);
+          // Change to low battery and discharging
+          batteryLevelStreamController.add(minEnoughBattery - 1);
+          batteryStateStreamController.add(BatteryState.discharging);
 
-        await Future.delayed(const Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 100));
 
-        expect(results.any((event) => event == true), true);
-      });
+          expect(results.any((event) => event == true), true);
+        },
+      );
 
       test('should return true when low power mode is enabled', () async {
         final ecoMode = buildEcoMode();
@@ -86,10 +89,10 @@ void main() {
 
         batteryLevelStreamController.add(100.0);
         await Future.delayed(const Duration(milliseconds: 50));
-        
+
         batteryStateStreamController.add(BatteryState.discharging);
         await Future.delayed(const Duration(milliseconds: 50));
-        
+
         batteryModeStreamController.add(true); // Eco mode enabled
 
         await Future.delayed(const Duration(milliseconds: 100));
@@ -297,43 +300,48 @@ void main() {
         expect(results.length, countAfterCancel);
       });
 
-      test('should be broadcast stream allowing independent listeners', () async {
-        final ecoMode = buildEcoMode();
-        final listener1Results = <bool?>[];
-        final listener2Results = <bool?>[];
+      test(
+        'should be broadcast stream allowing independent listeners',
+        () async {
+          final ecoMode = buildEcoMode();
+          final listener1Results = <bool?>[];
+          final listener2Results = <bool?>[];
 
-        final subscription1 = ecoMode.isBatteryEcoModeStream.listen((event) {
-          listener1Results.add(event);
-        });
+          final subscription1 = ecoMode.isBatteryEcoModeStream.listen((event) {
+            listener1Results.add(event);
+          });
 
-        batteryLevelStreamController.add(50.0);
-        batteryStateStreamController.add(BatteryState.charging);
-        batteryModeStreamController.add(false);
+          batteryLevelStreamController.add(50.0);
+          batteryStateStreamController.add(BatteryState.charging);
+          batteryModeStreamController.add(false);
 
-        await Future.delayed(const Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 100));
 
-        // First listener should have received an event
-        expect(listener1Results.isNotEmpty, true);
+          // First listener should have received an event
+          expect(listener1Results.isNotEmpty, true);
 
-        // Second listener can be attached to the same broadcast stream
-        final subscription2 = ecoMode.isBatteryEcoModeStream.listen((event) {
-          listener2Results.add(event);
-        });
+          // Second listener can be attached to the same broadcast stream
+          final subscription2 = ecoMode.isBatteryEcoModeStream.listen((event) {
+            listener2Results.add(event);
+          });
 
-        // Change state so both listeners can observe
-        batteryLevelStreamController.add(5.0); // low battery
-        batteryStateStreamController.add(BatteryState.discharging); // discharging
+          // Change state so both listeners can observe
+          batteryLevelStreamController.add(5.0); // low battery
+          batteryStateStreamController.add(
+            BatteryState.discharging,
+          ); // discharging
 
-        await Future.delayed(const Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 100));
 
-        // First listener should have more events than before
-        expect(listener1Results.length, greaterThan(1));
-        // Second listener might have received the last change
-        // (depending on stream timing)
+          // First listener should have more events than before
+          expect(listener1Results.length, greaterThan(1));
+          // Second listener might have received the last change
+          // (depending on stream timing)
 
-        subscription1.cancel();
-        subscription2.cancel();
-      });
+          subscription1.cancel();
+          subscription2.cancel();
+        },
+      );
     });
   });
 }

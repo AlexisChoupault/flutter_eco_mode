@@ -29,57 +29,54 @@ void main() {
   group('Simple Getters Tests', () {
     group('getPlatformInfo', () {
       test('should return platform info', () async {
-        when(() => ecoModeApi.getPlatformInfo())
-            .thenAnswer((_) async => 'iOS 17.0');
+        when(
+          () => ecoModeApi.getPlatformInfo(),
+        ).thenAnswer((_) async => 'iOS 17.0');
         expect(await buildEcoMode().getPlatformInfo(), 'iOS 17.0');
       });
 
       test('should return android platform', () async {
-        when(() => ecoModeApi.getPlatformInfo())
-            .thenAnswer((_) async => 'Android 14');
+        when(
+          () => ecoModeApi.getPlatformInfo(),
+        ).thenAnswer((_) async => 'Android 14');
         expect(await buildEcoMode().getPlatformInfo(), 'Android 14');
       });
     });
 
     group('getBatteryLevel', () {
       test('should return battery level', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 85.5);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 85.5);
         expect(await buildEcoMode().getBatteryLevel(), 85.5);
       });
 
       test('should return 0 when battery is empty', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 0.0);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 0.0);
         expect(await buildEcoMode().getBatteryLevel(), 0.0);
       });
 
       test('should return 100 when battery is full', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 100.0);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 100.0);
         expect(await buildEcoMode().getBatteryLevel(), 100.0);
       });
 
       test('should handle decimal values', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 42.7);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 42.7);
         expect(await buildEcoMode().getBatteryLevel(), 42.7);
       });
     });
 
     group('getBatteryState', () {
       test('should return charging state', () async {
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.charging);
-        expect(
-          await buildEcoMode().getBatteryState(),
-          BatteryState.charging,
-        );
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.charging);
+        expect(await buildEcoMode().getBatteryState(), BatteryState.charging);
       });
 
       test('should return discharging state', () async {
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.discharging);
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.discharging);
         expect(
           await buildEcoMode().getBatteryState(),
           BatteryState.discharging,
@@ -87,184 +84,180 @@ void main() {
       });
 
       test('should return full state', () async {
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.full);
-        expect(
-          await buildEcoMode().getBatteryState(),
-          BatteryState.full,
-        );
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.full);
+        expect(await buildEcoMode().getBatteryState(), BatteryState.full);
       });
 
       test('should return unknown state', () async {
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.unknown);
-        expect(
-          await buildEcoMode().getBatteryState(),
-          BatteryState.unknown,
-        );
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.unknown);
+        expect(await buildEcoMode().getBatteryState(), BatteryState.unknown);
       });
     });
 
     group('getThermalState', () {
       test('should return safe thermal state', () async {
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.safe);
-        expect(
-          await buildEcoMode().getThermalState(),
-          ThermalState.safe,
-        );
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.safe);
+        expect(await buildEcoMode().getThermalState(), ThermalState.safe);
       });
 
       test('should return fair thermal state', () async {
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.fair);
-        expect(
-          await buildEcoMode().getThermalState(),
-          ThermalState.fair,
-        );
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.fair);
+        expect(await buildEcoMode().getThermalState(), ThermalState.fair);
       });
 
       test('should return serious thermal state', () async {
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.serious);
-        expect(
-          await buildEcoMode().getThermalState(),
-          ThermalState.serious,
-        );
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.serious);
+        expect(await buildEcoMode().getThermalState(), ThermalState.serious);
       });
 
       test('should return critical thermal state', () async {
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.critical);
-        expect(
-          await buildEcoMode().getThermalState(),
-          ThermalState.critical,
-        );
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.critical);
+        expect(await buildEcoMode().getThermalState(), ThermalState.critical);
       });
     });
 
     group('isBatteryInLowPowerMode', () {
       test('should return true when low power mode is enabled', () async {
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => true);
+        when(
+          () => ecoModeApi.isBatteryInLowPowerMode(),
+        ).thenAnswer((_) async => true);
         expect(await buildEcoMode().isBatteryInLowPowerMode(), true);
       });
 
       test('should return false when low power mode is disabled', () async {
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => false);
+        when(
+          () => ecoModeApi.isBatteryInLowPowerMode(),
+        ).thenAnswer((_) async => false);
         expect(await buildEcoMode().isBatteryInLowPowerMode(), false);
       });
     });
 
     group('getProcessorCount', () {
       test('should return processor count', () async {
-        when(() => ecoModeApi.getProcessorCount())
-            .thenAnswer((_) async => 8);
+        when(() => ecoModeApi.getProcessorCount()).thenAnswer((_) async => 8);
         expect(await buildEcoMode().getProcessorCount(), 8);
       });
 
       test('should return single core processor', () async {
-        when(() => ecoModeApi.getProcessorCount())
-            .thenAnswer((_) async => 1);
+        when(() => ecoModeApi.getProcessorCount()).thenAnswer((_) async => 1);
         expect(await buildEcoMode().getProcessorCount(), 1);
       });
 
       test('should return high core count', () async {
-        when(() => ecoModeApi.getProcessorCount())
-            .thenAnswer((_) async => 32);
+        when(() => ecoModeApi.getProcessorCount()).thenAnswer((_) async => 32);
         expect(await buildEcoMode().getProcessorCount(), 32);
       });
     });
 
     group('getTotalMemory', () {
       test('should return total memory', () async {
-        when(() => ecoModeApi.getTotalMemory())
-            .thenAnswer((_) async => 8000000000); // 8GB
+        when(
+          () => ecoModeApi.getTotalMemory(),
+        ).thenAnswer((_) async => 8000000000); // 8GB
         expect(await buildEcoMode().getTotalMemory(), 8000000000);
       });
 
       test('should handle large memory values', () async {
-        when(() => ecoModeApi.getTotalMemory())
-            .thenAnswer((_) async => 12000000000); // 12GB
+        when(
+          () => ecoModeApi.getTotalMemory(),
+        ).thenAnswer((_) async => 12000000000); // 12GB
         expect(await buildEcoMode().getTotalMemory(), 12000000000);
       });
 
       test('should handle small memory values', () async {
-        when(() => ecoModeApi.getTotalMemory())
-            .thenAnswer((_) async => 2000000000); // 2GB
+        when(
+          () => ecoModeApi.getTotalMemory(),
+        ).thenAnswer((_) async => 2000000000); // 2GB
         expect(await buildEcoMode().getTotalMemory(), 2000000000);
       });
     });
 
     group('getFreeMemory', () {
       test('should return free memory', () async {
-        when(() => ecoModeApi.getFreeMemory())
-            .thenAnswer((_) async => 2000000000); // 2GB
+        when(
+          () => ecoModeApi.getFreeMemory(),
+        ).thenAnswer((_) async => 2000000000); // 2GB
         expect(await buildEcoMode().getFreeMemory(), 2000000000);
       });
 
       test('should return zero when no free memory', () async {
-        when(() => ecoModeApi.getFreeMemory())
-            .thenAnswer((_) async => 0);
+        when(() => ecoModeApi.getFreeMemory()).thenAnswer((_) async => 0);
         expect(await buildEcoMode().getFreeMemory(), 0);
       });
 
       test('should return large free memory', () async {
-        when(() => ecoModeApi.getFreeMemory())
-            .thenAnswer((_) async => 6000000000); // 6GB
+        when(
+          () => ecoModeApi.getFreeMemory(),
+        ).thenAnswer((_) async => 6000000000); // 6GB
         expect(await buildEcoMode().getFreeMemory(), 6000000000);
       });
     });
 
     group('getTotalStorage', () {
       test('should return total storage', () async {
-        when(() => ecoModeApi.getTotalStorage())
-            .thenAnswer((_) async => 128000000000); // 128GB
+        when(
+          () => ecoModeApi.getTotalStorage(),
+        ).thenAnswer((_) async => 128000000000); // 128GB
         expect(await buildEcoMode().getTotalStorage(), 128000000000);
       });
 
       test('should handle various storage sizes', () async {
-        when(() => ecoModeApi.getTotalStorage())
-            .thenAnswer((_) async => 64000000000); // 64GB
+        when(
+          () => ecoModeApi.getTotalStorage(),
+        ).thenAnswer((_) async => 64000000000); // 64GB
         expect(await buildEcoMode().getTotalStorage(), 64000000000);
       });
 
       test('should handle small storage', () async {
-        when(() => ecoModeApi.getTotalStorage())
-            .thenAnswer((_) async => 32000000000); // 32GB
+        when(
+          () => ecoModeApi.getTotalStorage(),
+        ).thenAnswer((_) async => 32000000000); // 32GB
         expect(await buildEcoMode().getTotalStorage(), 32000000000);
       });
     });
 
     group('getFreeStorage', () {
       test('should return free storage', () async {
-        when(() => ecoModeApi.getFreeStorage())
-            .thenAnswer((_) async => 50000000000); // 50GB
+        when(
+          () => ecoModeApi.getFreeStorage(),
+        ).thenAnswer((_) async => 50000000000); // 50GB
         expect(await buildEcoMode().getFreeStorage(), 50000000000);
       });
 
       test('should return zero when storage is full', () async {
-        when(() => ecoModeApi.getFreeStorage())
-            .thenAnswer((_) async => 0);
+        when(() => ecoModeApi.getFreeStorage()).thenAnswer((_) async => 0);
         expect(await buildEcoMode().getFreeStorage(), 0);
       });
 
       test('should handle various free storage values', () async {
-        when(() => ecoModeApi.getFreeStorage())
-            .thenAnswer((_) async => 20000000000); // 20GB
+        when(
+          () => ecoModeApi.getFreeStorage(),
+        ).thenAnswer((_) async => 20000000000); // 20GB
         expect(await buildEcoMode().getFreeStorage(), 20000000000);
       });
     });
 
     group('Concurrent getters', () {
       test('should handle multiple concurrent getter calls', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 75.0);
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.discharging);
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.safe);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 75.0);
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.discharging);
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.safe);
 
         final ecoMode = buildEcoMode();
         final results = await Future.wait([
@@ -279,16 +272,15 @@ void main() {
       });
 
       test('should handle all getters together', () async {
-        when(() => ecoModeApi.getPlatformInfo())
-            .thenAnswer((_) async => 'iOS');
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 50.0);
-        when(() => ecoModeApi.getProcessorCount())
-            .thenAnswer((_) async => 6);
-        when(() => ecoModeApi.getTotalMemory())
-            .thenAnswer((_) async => 4000000000);
-        when(() => ecoModeApi.getFreeMemory())
-            .thenAnswer((_) async => 1000000000);
+        when(() => ecoModeApi.getPlatformInfo()).thenAnswer((_) async => 'iOS');
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 50.0);
+        when(() => ecoModeApi.getProcessorCount()).thenAnswer((_) async => 6);
+        when(
+          () => ecoModeApi.getTotalMemory(),
+        ).thenAnswer((_) async => 4000000000);
+        when(
+          () => ecoModeApi.getFreeMemory(),
+        ).thenAnswer((_) async => 1000000000);
 
         final ecoMode = buildEcoMode();
         final platform = await ecoMode.getPlatformInfo();
@@ -306,10 +298,7 @@ void main() {
 
       test('should handle slow concurrent calls', () async {
         when(() => ecoModeApi.getBatteryLevel()).thenAnswer(
-          (_) => Future.delayed(
-            const Duration(milliseconds: 100),
-            () => 80.0,
-          ),
+          (_) => Future.delayed(const Duration(milliseconds: 100), () => 80.0),
         );
         when(() => ecoModeApi.getTotalMemory()).thenAnswer(
           (_) => Future.delayed(
@@ -333,14 +322,18 @@ void main() {
 
     group('isBatteryEcoMode method', () {
       test('should return true when battery is low and discharging', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => minEnoughBattery - 5);
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.discharging);
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => false);
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.safe);
+        when(
+          () => ecoModeApi.getBatteryLevel(),
+        ).thenAnswer((_) async => minEnoughBattery - 5);
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.discharging);
+        when(
+          () => ecoModeApi.isBatteryInLowPowerMode(),
+        ).thenAnswer((_) async => false);
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.safe);
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.isBatteryEcoMode();
@@ -349,14 +342,16 @@ void main() {
       });
 
       test('should return true when battery is in low power mode', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 50.0);
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.charging);
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => true);
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.safe);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 50.0);
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.charging);
+        when(
+          () => ecoModeApi.isBatteryInLowPowerMode(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.safe);
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.isBatteryEcoMode();
@@ -364,31 +359,40 @@ void main() {
         expect(result, true);
       });
 
-      test('should return true when thermal state is serious or critical', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 80.0);
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.charging);
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => false);
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.serious);
+      test(
+        'should return true when thermal state is serious or critical',
+        () async {
+          when(
+            () => ecoModeApi.getBatteryLevel(),
+          ).thenAnswer((_) async => 80.0);
+          when(
+            () => ecoModeApi.getBatteryState(),
+          ).thenAnswer((_) async => BatteryState.charging);
+          when(
+            () => ecoModeApi.isBatteryInLowPowerMode(),
+          ).thenAnswer((_) async => false);
+          when(
+            () => ecoModeApi.getThermalState(),
+          ).thenAnswer((_) async => ThermalState.serious);
 
-        final ecoMode = buildEcoMode();
-        final result = await ecoMode.isBatteryEcoMode();
+          final ecoMode = buildEcoMode();
+          final result = await ecoMode.isBatteryEcoMode();
 
-        expect(result, true);
-      });
+          expect(result, true);
+        },
+      );
 
       test('should return false when all conditions are healthy', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 80.0);
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.charging);
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => false);
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.safe);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 80.0);
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.charging);
+        when(
+          () => ecoModeApi.isBatteryInLowPowerMode(),
+        ).thenAnswer((_) async => false);
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.safe);
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.isBatteryEcoMode();
@@ -397,14 +401,16 @@ void main() {
       });
 
       test('should handle thermal critical state', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => 100.0);
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.charging);
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => false);
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.critical);
+        when(() => ecoModeApi.getBatteryLevel()).thenAnswer((_) async => 100.0);
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.charging);
+        when(
+          () => ecoModeApi.isBatteryInLowPowerMode(),
+        ).thenAnswer((_) async => false);
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.critical);
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.isBatteryEcoMode();
@@ -413,14 +419,18 @@ void main() {
       });
 
       test('should return false when battery is not discharging', () async {
-        when(() => ecoModeApi.getBatteryLevel())
-            .thenAnswer((_) async => minEnoughBattery - 5);
-        when(() => ecoModeApi.getBatteryState())
-            .thenAnswer((_) async => BatteryState.charging);
-        when(() => ecoModeApi.isBatteryInLowPowerMode())
-            .thenAnswer((_) async => false);
-        when(() => ecoModeApi.getThermalState())
-            .thenAnswer((_) async => ThermalState.safe);
+        when(
+          () => ecoModeApi.getBatteryLevel(),
+        ).thenAnswer((_) async => minEnoughBattery - 5);
+        when(
+          () => ecoModeApi.getBatteryState(),
+        ).thenAnswer((_) async => BatteryState.charging);
+        when(
+          () => ecoModeApi.isBatteryInLowPowerMode(),
+        ).thenAnswer((_) async => false);
+        when(
+          () => ecoModeApi.getThermalState(),
+        ).thenAnswer((_) async => ThermalState.safe);
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.isBatteryEcoMode();
@@ -430,48 +440,56 @@ void main() {
     });
 
     group('getDeviceRange method', () {
-      test('should return highEnd device for score > minScoreMidRangeDevice',
-          () async {
-        when(() => ecoModeApi.getEcoScore())
-            .thenAnswer((_) async => minScoreMidRangeDevice + 0.1);
+      test(
+        'should return highEnd device for score > minScoreMidRangeDevice',
+        () async {
+          when(
+            () => ecoModeApi.getEcoScore(),
+          ).thenAnswer((_) async => minScoreMidRangeDevice + 0.1);
 
-        final ecoMode = buildEcoMode();
-        final result = await ecoMode.getDeviceRange();
+          final ecoMode = buildEcoMode();
+          final result = await ecoMode.getDeviceRange();
 
-        expect(result, isNotNull);
-        expect(result!.range, DeviceEcoRange.highEnd);
-        expect(result.isLowEndDevice, false);
-      });
+          expect(result, isNotNull);
+          expect(result!.range, DeviceEcoRange.highEnd);
+          expect(result.isLowEndDevice, false);
+        },
+      );
 
-      test('should return midRange device for score between thresholds',
-          () async {
-        when(() => ecoModeApi.getEcoScore()).thenAnswer((_) async =>
-            (minScoreLowEndDevice + minScoreMidRangeDevice) / 2);
+      test(
+        'should return midRange device for score between thresholds',
+        () async {
+          when(() => ecoModeApi.getEcoScore()).thenAnswer(
+            (_) async => (minScoreLowEndDevice + minScoreMidRangeDevice) / 2,
+          );
 
-        final ecoMode = buildEcoMode();
-        final result = await ecoMode.getDeviceRange();
+          final ecoMode = buildEcoMode();
+          final result = await ecoMode.getDeviceRange();
 
-        expect(result, isNotNull);
-        expect(result!.range, DeviceEcoRange.midRange);
-        expect(result.isLowEndDevice, false);
-      });
+          expect(result, isNotNull);
+          expect(result!.range, DeviceEcoRange.midRange);
+          expect(result.isLowEndDevice, false);
+        },
+      );
 
-      test('should return lowEnd device for score < minScoreLowEndDevice',
-          () async {
-        when(() => ecoModeApi.getEcoScore())
-            .thenAnswer((_) async => minScoreLowEndDevice - 0.1);
+      test(
+        'should return lowEnd device for score < minScoreLowEndDevice',
+        () async {
+          when(
+            () => ecoModeApi.getEcoScore(),
+          ).thenAnswer((_) async => minScoreLowEndDevice - 0.1);
 
-        final ecoMode = buildEcoMode();
-        final result = await ecoMode.getDeviceRange();
+          final ecoMode = buildEcoMode();
+          final result = await ecoMode.getDeviceRange();
 
-        expect(result, isNotNull);
-        expect(result!.range, DeviceEcoRange.lowEnd);
-        expect(result.isLowEndDevice, true);
-      });
+          expect(result, isNotNull);
+          expect(result!.range, DeviceEcoRange.lowEnd);
+          expect(result.isLowEndDevice, true);
+        },
+      );
 
       test('should return null when API returns null', () async {
-        when(() => ecoModeApi.getEcoScore())
-            .thenAnswer((_) async => null);
+        when(() => ecoModeApi.getEcoScore()).thenAnswer((_) async => null);
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.getDeviceRange();
@@ -481,8 +499,7 @@ void main() {
 
       test('should set correct score value in result', () async {
         const score = 0.75;
-        when(() => ecoModeApi.getEcoScore())
-            .thenAnswer((_) async => score);
+        when(() => ecoModeApi.getEcoScore()).thenAnswer((_) async => score);
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.getDeviceRange();
@@ -490,16 +507,19 @@ void main() {
         expect(result!.score, score);
       });
 
-      test('should return highEnd for boundary value at midRange threshold',
-          () async {
-        when(() => ecoModeApi.getEcoScore())
-            .thenAnswer((_) async => minScoreMidRangeDevice);
+      test(
+        'should return highEnd for boundary value at midRange threshold',
+        () async {
+          when(
+            () => ecoModeApi.getEcoScore(),
+          ).thenAnswer((_) async => minScoreMidRangeDevice);
 
-        final ecoMode = buildEcoMode();
-        final result = await ecoMode.getDeviceRange();
+          final ecoMode = buildEcoMode();
+          final result = await ecoMode.getDeviceRange();
 
-        expect(result!.range, DeviceEcoRange.midRange);
-      });
+          expect(result!.range, DeviceEcoRange.midRange);
+        },
+      );
     });
 
     group('hasEnoughNetwork method', () {
@@ -574,8 +594,9 @@ void main() {
       });
 
       test('should return null when API throws error', () async {
-        when(() => ecoModeApi.getConnectivity())
-            .thenThrow(Exception('API error'));
+        when(
+          () => ecoModeApi.getConnectivity(),
+        ).thenThrow(Exception('API error'));
 
         final ecoMode = buildEcoMode();
         final result = await ecoMode.hasEnoughNetwork();
@@ -703,10 +724,7 @@ void main() {
         });
 
         connectivityStreamController.add(
-          Connectivity(
-            type: ConnectivityType.none,
-            wifiSignalStrength: null,
-          ),
+          Connectivity(type: ConnectivityType.none, wifiSignalStrength: null),
         );
 
         await Future.delayed(const Duration(milliseconds: 100));
@@ -789,7 +807,10 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 50));
 
         connectivityStreamController.add(
-          Connectivity(type: ConnectivityType.mobile2g, wifiSignalStrength: null),
+          Connectivity(
+            type: ConnectivityType.mobile2g,
+            wifiSignalStrength: null,
+          ),
         );
         await Future.delayed(const Duration(milliseconds: 50));
 
@@ -799,10 +820,18 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 50));
 
         expect(results.length, greaterThanOrEqualTo(3));
-        expect(results.map((c) => c.type).toList(), contains(ConnectivityType.wifi));
-        expect(results.map((c) => c.type).toList(),
-            contains(ConnectivityType.mobile2g));
-        expect(results.map((c) => c.type).toList(), contains(ConnectivityType.none));
+        expect(
+          results.map((c) => c.type).toList(),
+          contains(ConnectivityType.wifi),
+        );
+        expect(
+          results.map((c) => c.type).toList(),
+          contains(ConnectivityType.mobile2g),
+        );
+        expect(
+          results.map((c) => c.type).toList(),
+          contains(ConnectivityType.none),
+        );
       });
     });
   });

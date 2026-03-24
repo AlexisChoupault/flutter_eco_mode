@@ -33,10 +33,3 @@ extension ConnectivityExtensions on Connectivity {
           ? wifiSignalStrength! >= minWifiSignalStrength
           : false;
 }
-
-extension StreamExtensions<T> on Stream<T> {
-  Stream<T> withInitialValue(Future<T> value) async* {
-    yield await value;
-    yield* this;
-  }
-}

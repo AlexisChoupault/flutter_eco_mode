@@ -177,7 +177,7 @@ class FlutterEcoMode extends FlutterEcoModePlatform {
   Stream<bool?> get isBatteryEcoModeStream =>
       CombineLatestStream.list([
         _isNotEnoughBatteryStream(),
-        lowPowerModeEventStream.withInitialValue(isBatteryInLowPowerMode()),
+        lowPowerModeEventStream,
       ]).map((event) => event.any((element) => element)).asBroadcastStream();
 
   Stream<bool> _isNotEnoughBatteryStream() =>

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_eco_mode/src/constants.dart';
 import 'package:flutter_eco_mode/src/extensions.dart';
 import 'package:flutter_eco_mode/src/messages.g.dart';
@@ -112,132 +110,68 @@ void main() {
         expect(connectivity.isEnough, true);
       });
 
-      test('should return true when connectivity type is wifi and signal is enough', () {
-        final connectivity = Connectivity(
-          type: ConnectivityType.wifi,
-          wifiSignalStrength: minWifiSignalStrength,
-        );
-        expect(connectivity.isEnough, true);
-      });
+      test(
+        'should return true when connectivity type is wifi and signal is enough',
+        () {
+          final connectivity = Connectivity(
+            type: ConnectivityType.wifi,
+            wifiSignalStrength: minWifiSignalStrength,
+          );
+          expect(connectivity.isEnough, true);
+        },
+      );
 
-      test('should return true when connectivity type is wifi and signal is above minimum', () {
-        final connectivity = Connectivity(
-          type: ConnectivityType.wifi,
-          wifiSignalStrength: minWifiSignalStrength + 1,
-        );
-        expect(connectivity.isEnough, true);
-      });
+      test(
+        'should return true when connectivity type is wifi and signal is above minimum',
+        () {
+          final connectivity = Connectivity(
+            type: ConnectivityType.wifi,
+            wifiSignalStrength: minWifiSignalStrength + 1,
+          );
+          expect(connectivity.isEnough, true);
+        },
+      );
 
-      test('should return false when connectivity type is wifi and signal is below minimum', () {
-        final connectivity = Connectivity(
-          type: ConnectivityType.wifi,
-          wifiSignalStrength: minWifiSignalStrength - 1,
-        );
-        expect(connectivity.isEnough, false);
-      });
+      test(
+        'should return false when connectivity type is wifi and signal is below minimum',
+        () {
+          final connectivity = Connectivity(
+            type: ConnectivityType.wifi,
+            wifiSignalStrength: minWifiSignalStrength - 1,
+          );
+          expect(connectivity.isEnough, false);
+        },
+      );
 
-      test('should return false when connectivity type is wifi and signal is null', () {
-        final connectivity = Connectivity(type: ConnectivityType.wifi);
-        expect(connectivity.isEnough, false);
-      });
+      test(
+        'should return false when connectivity type is wifi and signal is null',
+        () {
+          final connectivity = Connectivity(type: ConnectivityType.wifi);
+          expect(connectivity.isEnough, false);
+        },
+      );
 
-      test('should return true when connectivity type is wifi and signal is 0', () {
-        final connectivity = Connectivity(
-          type: ConnectivityType.wifi,
-          wifiSignalStrength: 0,
-        );
-        expect(connectivity.isEnough, true);
-      });
+      test(
+        'should return true when connectivity type is wifi and signal is 0',
+        () {
+          final connectivity = Connectivity(
+            type: ConnectivityType.wifi,
+            wifiSignalStrength: 0,
+          );
+          expect(connectivity.isEnough, true);
+        },
+      );
 
-      test('should return false when connectivity type is wifi and signal is below threshold', () {
-        final connectivity = Connectivity(
-          type: ConnectivityType.wifi,
-          wifiSignalStrength: minWifiSignalStrength - 1,
-        );
-        expect(connectivity.isEnough, false);
-      });
-    });
-  });
-
-  group('StreamExtensions', () {
-    group('withInitialValue', () {
-      test('should emit initial value first', () async {
-        final stream = Stream<int>.fromIterable([2, 3]);
-        final futureValue = Future<int>.value(1);
-        
-        final result = await stream
-            .withInitialValue(futureValue)
-            .toList();
-
-        expect(result, [1, 2, 3]);
-      });
-
-      test('should emit initial value before stream values', () async {
-        final streamController = StreamController<String>();
-        final futureValue = Future<String>.value('initial');
-        
-        final result = <String>[];
-        streamController.stream
-            .withInitialValue(futureValue)
-            .listen((value) {
-              result.add(value);
-            });
-
-        streamController.add('first');
-        streamController.add('second');
-        await streamController.close();
-        
-        // Attendre que tous les événements soient traités
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        expect(result, ['initial', 'first', 'second']);
-      });
-
-      test('should handle async initial value', () async {
-        final stream = Stream<int>.fromIterable([2, 3]);
-        final futureValue = Future<int>.delayed(
-          const Duration(milliseconds: 10),
-          () => 1,
-        );
-        
-        final result = await stream
-            .withInitialValue(futureValue)
-            .toList();
-
-        expect(result, [1, 2, 3]);
-      });
-
-      test('should handle empty stream', () async {
-        final stream = Stream<int>.fromIterable([]);
-        final futureValue = Future<int>.value(1);
-        
-        final result = await stream
-            .withInitialValue(futureValue)
-            .toList();
-
-        expect(result, [1]);
-      });
-
-      test('should work with stream controller', () async {
-        final streamController = StreamController<double>();
-        final futureValue = Future<double>.value(1.5);
-        
-        final result = <double>[];
-        streamController.stream
-            .withInitialValue(futureValue)
-            .listen((value) {
-              result.add(value);
-            });
-
-        streamController.add(2.5);
-        streamController.add(3.5);
-        await streamController.close();
-        
-        // Attendre que tous les événements soient traités
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        expect(result, [1.5, 2.5, 3.5]);
-      });
+      test(
+        'should return false when connectivity type is wifi and signal is below threshold',
+        () {
+          final connectivity = Connectivity(
+            type: ConnectivityType.wifi,
+            wifiSignalStrength: minWifiSignalStrength - 1,
+          );
+          expect(connectivity.isEnough, false);
+        },
+      );
     });
   });
 }
