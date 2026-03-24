@@ -100,14 +100,14 @@ class EcoModeImplem(
     }
 
     override fun getTotalStorage(): Long {
-        val statFs = StatFs(Environment.getExternalStorageDirectory().absolutePath)
+        val statFs = StatFs(Environment.getDataDirectory().absolutePath)
         val blockSizeLong = statFs.blockSizeLong
         val totalBlocksLong = statFs.blockCountLong
         return blockSizeLong * totalBlocksLong
     }
 
     override fun getFreeStorage(): Long {
-        val statFs = StatFs(Environment.getExternalStorageDirectory().absolutePath)
+        val statFs = StatFs(Environment.getDataDirectory().absolutePath)
         val blockSizeLong = statFs.blockSizeLong
         val availableBlocksLong = statFs.availableBlocksLong
         return blockSizeLong * availableBlocksLong
