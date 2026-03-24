@@ -77,14 +77,8 @@ class EcoModeImplem: EcoModeApi, EcoModeComponent {
         return Int64(ProcessInfo.processInfo.physicalMemory)
     }
     
-    func getFreeMemory() throws -> Int64 {
-        var availabeRam: Int = 0
-        if #available(iOS 13.0, *) {
-            availabeRam = os_proc_available_memory()
-        } else {
-            // Fallback on earlier versions
-        }
-        return Int64(availabeRam)
+    func getFreeMemory() throws -> Int64 {        
+        return Int64(os_proc_available_memory())
     }
     
     func getConnectivity(completion: @escaping (Result<Connectivity, Error>) -> Void) {
