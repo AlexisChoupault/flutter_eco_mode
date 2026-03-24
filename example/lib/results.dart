@@ -145,3 +145,10 @@ class _ResultDecoration extends StatelessWidget {
     );
   }
 }
+
+extension StreamExtensions<T> on Stream<T> {
+  Stream<T> withInitialValue(Future<T> value) async* {
+    yield await value;
+    yield* this;
+  }
+}
