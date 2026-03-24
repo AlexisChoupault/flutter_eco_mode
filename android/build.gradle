@@ -1,4 +1,4 @@
-group = "sncf.connect.tech.flutter_eco_mode.flutter_eco_mode"
+group = "sncf.connect.tech.flutter_eco_mode"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -25,7 +25,7 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
-    namespace = "sncf.connect.tech.flutter_eco_mode.flutter_eco_mode"
+    namespace = "sncf.connect.tech.flutter_eco_mode"
 
     compileSdk = 36
 
