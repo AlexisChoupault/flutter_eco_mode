@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter_eco_mode/flutter_eco_mode.dart';
-import 'package:flutter_eco_mode/src/constants.dart';
-import 'package:flutter_eco_mode/src/flutter_eco_mode.dart';
-import 'package:flutter_eco_mode/src/messages.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import 'package:flutter_eco_mode/flutter_eco_mode.dart';
+import 'package:flutter_eco_mode/src/constants.dart';
+import 'package:flutter_eco_mode/src/messages.g.dart';
 
 class MockEcoModeApi extends Mock implements EcoModeApi {}
 
