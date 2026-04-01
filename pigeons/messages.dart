@@ -73,5 +73,20 @@ abstract class EcoModeApi {
 
   double? getEcoScore();
 
+  @async
   Connectivity getConnectivity();
+
+  @async
+  bool requestNetworkStatePermission();
+
+  @async
+  bool requestPhoneStatePermission();
+}
+
+@EventChannelApi()
+abstract class EcoModeEventChannel {
+  double batteryLevel();
+  BatteryState batteryState();
+  bool batteryMode();
+  Connectivity connectivity();
 }

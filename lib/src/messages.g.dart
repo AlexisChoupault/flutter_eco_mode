@@ -147,6 +147,10 @@ class _PigeonCodec extends StandardMessageCodec {
   }
 }
 
+const StandardMethodCodec pigeonMethodCodec = StandardMethodCodec(
+  _PigeonCodec(),
+);
+
 class EcoModeApi {
   /// Constructor for [EcoModeApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
@@ -493,4 +497,112 @@ class EcoModeApi {
       return (pigeonVar_replyList[0] as Connectivity?)!;
     }
   }
+
+  Future<bool> requestNetworkStatePermission() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestNetworkStatePermission$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
+    }
+  }
+
+  Future<bool> requestPhoneStatePermission() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.flutter_eco_mode.EcoModeApi.requestPhoneStatePermission$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
+    }
+  }
+}
+
+Stream<double> batteryLevel({String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel batteryLevelChannel = EventChannel(
+    'dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryLevel$instanceName',
+    pigeonMethodCodec,
+  );
+  return batteryLevelChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as double;
+  });
+}
+
+Stream<BatteryState> batteryState({String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel batteryStateChannel = EventChannel(
+    'dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryState$instanceName',
+    pigeonMethodCodec,
+  );
+  return batteryStateChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as BatteryState;
+  });
+}
+
+Stream<bool> batteryMode({String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel batteryModeChannel = EventChannel(
+    'dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.batteryMode$instanceName',
+    pigeonMethodCodec,
+  );
+  return batteryModeChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as bool;
+  });
+}
+
+Stream<Connectivity> connectivity({String instanceName = ''}) {
+  if (instanceName.isNotEmpty) {
+    instanceName = '.$instanceName';
+  }
+  final EventChannel connectivityChannel = EventChannel(
+    'dev.flutter.pigeon.flutter_eco_mode.EcoModeEventChannel.connectivity$instanceName',
+    pigeonMethodCodec,
+  );
+  return connectivityChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as Connectivity;
+  });
 }

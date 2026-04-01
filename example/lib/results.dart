@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_eco_mode/flutter_eco_mode.dart';
 
 class ResultLine {
   final String label;
@@ -144,5 +143,12 @@ class _ResultDecoration extends StatelessWidget {
       ),
       child: Padding(padding: const EdgeInsets.all(8.0), child: widget),
     );
+  }
+}
+
+extension StreamExtensions<T> on Stream<T> {
+  Stream<T> withInitialValue(Future<T> value) async* {
+    yield await value;
+    yield* this;
   }
 }
